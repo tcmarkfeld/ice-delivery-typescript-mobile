@@ -21,6 +21,11 @@ import { Delivery } from "@/api/types";
 import { DeliveryCountSummary } from "@/components/delivery/delivery-count-summary";
 import { DeliveryListItem } from "@/components/delivery/delivery-list-item";
 import {
+  formatDateRangeLabel,
+  parseIsoDateKey,
+  toIsoDateKey,
+} from "@/features/date/date-key-utils";
+import {
   buildDeliverySummary,
   getBusinessDateKey,
   sortDeliveries,
@@ -31,34 +36,6 @@ enum DateField {
   Start = "start",
   End = "end",
 }
-
-const dateToLocalDateKey = (dateValue: Date): string => {
-  const year = dateValue.getFullYear();
-  const month = String(dateValue.getMonth() + 1).padStart(2, "0");
-  const day = String(dateValue.getDate()).padStart(2, "0");
-
-  return `${year}-${month}-${day}`;
-};
-
-const parseDateKeyToLocalDate = (dateKey: string): Date => {
-  const [year, month, day] = dateKey.split("-").map(Number);
-  return new Date(year, month - 1, day);
-};
-
-const formatRangeLabel = (startDateKey: string, endDateKey: string): string => {
-  const startDate = parseDateKeyToLocalDate(startDateKey);
-  const endDate = parseDateKeyToLocalDate(endDateKey);
-  const startLabel = startDate.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-  });
-  const endLabel = endDate.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-  });
-
-  return `${startLabel} - ${endLabel}`;
-};
 
 export default function TomorrowDeliveriesScreen() {
   const insets = useSafeAreaInsets();
@@ -94,7 +71,7 @@ export default function TomorrowDeliveriesScreen() {
       return;
     }
 
-    const selectedDateKey = dateToLocalDateKey(selectedDate);
+    const selectedDateKey = toIsoDateKey(selectedDate);
 
     if (activeDateField === DateField.Start) {
       setStartDate(selectedDateKey);
@@ -117,7 +94,7 @@ export default function TomorrowDeliveriesScreen() {
 
   const openDatePicker = (field: DateField) => {
     const dateKey = field === DateField.Start ? startDate : endDate;
-    const currentDate = parseDateKeyToLocalDate(dateKey);
+    const currentDate = parseIsoDateKey(dateKey);
 
     if (Platform.OS === "android") {
       setActiveDateField(field);
@@ -194,7 +171,7 @@ export default function TomorrowDeliveriesScreen() {
           </View>
         </View>
         <Text style={styles.dateRangeText}>
-          Showing: {formatRangeLabel(startDate, endDate)}
+          Showing: {formatDateRangeLabel(startDate, endDate)}
         </Text>
       </View>
 
@@ -213,7 +190,7 @@ export default function TomorrowDeliveriesScreen() {
             display="inline"
             mode="date"
             onChange={onDateChange}
-            value={parseDateKeyToLocalDate(
+            value={parseIsoDateKey(
               activeDateField === DateField.Start ? startDate : endDate,
             )}
           />

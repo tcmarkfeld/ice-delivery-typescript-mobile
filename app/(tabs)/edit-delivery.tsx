@@ -26,6 +26,7 @@ import { useAllDeliveriesQuery } from '@/api/queries/use-deliveries-query';
 import { useUpdateDeliveryMutation } from '@/api/queries/use-update-delivery-mutation';
 import { ApiQueryKey } from '@/api/query-keys';
 import { CreateDeliveryInput, Delivery } from '@/api/types';
+import { parseIsoDateKey, sanitizeDateKey, toIsoDateKey } from '@/features/date/date-key-utils';
 import { neighborhoodData } from '@/features/neighborhood/constants';
 import {
   detectNeighborhoodFromAddress,
@@ -54,20 +55,6 @@ enum DateField {
   StartDate = 'startDate',
   EndDate = 'endDate',
 }
-
-const toIsoDateKey = (dateValue: Date): string => {
-  const year = dateValue.getFullYear();
-  const month = String(dateValue.getMonth() + 1).padStart(2, '0');
-  const day = String(dateValue.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-};
-
-const parseIsoDateKey = (value: string): Date => {
-  const [year, month, day] = value.split('-').map(Number);
-  return new Date(year, month - 1, day);
-};
-
-const sanitizeDateKey = (value: string): string => value.slice(0, 10);
 
 const formatPhoneNumber = (rawValue: string): string => {
   const digitsOnly = rawValue.replace(/\D/g, '').slice(0, 10);

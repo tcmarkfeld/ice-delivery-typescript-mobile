@@ -29,6 +29,11 @@ import { ApiQueryKey } from "@/api/query-keys";
 import { Delivery } from "@/api/types";
 import { DeliveryListItem } from "@/components/delivery/delivery-list-item";
 import {
+  isValidDateKey,
+  parseIsoDateKey,
+  toIsoDateKey,
+} from "@/features/date/date-key-utils";
+import {
   getBusinessDateKey,
   sortDeliveries,
 } from "@/features/deliveries/delivery-utils";
@@ -79,36 +84,6 @@ interface TipReportObject {
   data?: unknown;
   rows?: unknown;
 }
-
-const dateKeyPattern = /^\d{4}-\d{2}-\d{2}$/;
-
-const dateToLocalDateKey = (dateValue: Date): string => {
-  const year = dateValue.getFullYear();
-  const month = String(dateValue.getMonth() + 1).padStart(2, "0");
-  const day = String(dateValue.getDate()).padStart(2, "0");
-
-  return `${year}-${month}-${day}`;
-};
-
-const parseDateKeyToLocalDate = (dateKey: string): Date => {
-  const [year, month, day] = dateKey.split("-").map(Number);
-  return new Date(year, month - 1, day);
-};
-
-const isValidDateKey = (value: string): boolean => {
-  if (!dateKeyPattern.test(value)) {
-    return false;
-  }
-
-  const [year, month, day] = value.split("-").map(Number);
-  const dateValue = new Date(year, month - 1, day);
-
-  return (
-    dateValue.getFullYear() === year &&
-    dateValue.getMonth() === month - 1 &&
-    dateValue.getDate() === day
-  );
-};
 
 const emptyTipReportSummary: TipReportSummary = {
   averageTipPerDelivery: 0,
@@ -410,7 +385,7 @@ export default function AllDeliveriesScreen() {
       return;
     }
 
-    const nextDateKey = dateToLocalDateKey(selectedDate);
+    const nextDateKey = toIsoDateKey(selectedDate);
 
     if (activeTipDateField === TipDateField.Start) {
       setTipReportStartDateInput(nextDateKey);
@@ -438,7 +413,7 @@ export default function AllDeliveriesScreen() {
       field === TipDateField.Start
         ? tipReportStartDateInput
         : tipReportEndDateInput;
-    const currentDate = parseDateKeyToLocalDate(fieldDateKey);
+    const currentDate = parseIsoDateKey(fieldDateKey);
 
     if (Platform.OS === "android") {
       setActiveTipDateField(field);
@@ -768,7 +743,7 @@ export default function AllDeliveriesScreen() {
                   display="inline"
                   mode="date"
                   onChange={onTipDateChange}
-                  value={parseDateKeyToLocalDate(
+                  value={parseIsoDateKey(
                     activeTipDateField === TipDateField.Start
                       ? tipReportStartDateInput
                       : tipReportEndDateInput,
