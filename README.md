@@ -1,50 +1,70 @@
-# Welcome to your Expo app 👋
+# Ice Delivery Mobile (TypeScript)
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Clean Expo/React Native rewrite of the Ice Delivery mobile app.
 
-## Get started
+This app is currently API-driven and uses React Query for server state, React Hook Form + Zod for forms/validation, and secure token storage for auth sessions.
+
+## Tech Stack
+
+- Expo + React Native + Expo Router
+- TypeScript
+- TanStack React Query
+- React Hook Form + Zod
+- `expo-secure-store` for auth token persistence
+- `@react-native-community/datetimepicker`
+
+## Features Implemented
+
+- Authenticated app shell with login guard
+- Home page for today’s deliveries
+  - Delivery cards with pickup/completion UX
+  - Daily count summary (coolers/add-ons)
+- All Deliveries page
+  - Search
+  - Week filter
+  - Tip report modal with selectable date range
+  - Edit/Delete actions
+- Tomorrow’s Deliveries page
+  - Defaults to tomorrow
+  - User-selectable start/end date range
+  - Shared count summary component
+- Add Delivery form
+  - React Hook Form + Zod
+  - Date pickers
+  - Neighborhood auto-detection from address
+- Edit Delivery form
+  - Same dropdown and date behavior as Add form
+
+## Getting Started
 
 1. Install dependencies
 
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
 ```bash
-npm run reset-project
+npm install
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+2. Run the app
 
-## Learn more
+```bash
+npm run start
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+Use Expo CLI options to open on iOS simulator, Android emulator, or Expo Go.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## Scripts
 
-## Join the community
+- `npm run start` - start Expo
+- `npm run ios` - run on iOS simulator
+- `npm run android` - run on Android emulator/device
+- `npm run web` - run web target
+- `npm run lint` - run Expo ESLint config
 
-Join our community of developers creating universal apps.
+## Project Structure
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- `app/` - routes/screens (Expo Router)
+- `api/` - endpoints, HTTP client, React Query hooks
+- `auth/` - session provider, token storage, auth response parsing
+- `components/` - reusable UI
+- `features/` - domain logic/utilities (deliveries, neighborhoods, date helpers)
+- `hooks/` - shared hooks
+- `providers/` - app-level providers
