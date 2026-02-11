@@ -713,7 +713,7 @@ export default function AddDeliveryScreen() {
       {Platform.OS === "ios" ? (
         <Modal
           animationType="slide"
-          presentationStyle="pageSheet"
+          presentationStyle="overFullScreen"
           transparent
           visible={activeDateField !== null}
         >

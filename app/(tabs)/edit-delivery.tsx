@@ -599,7 +599,7 @@ export default function EditDeliveryScreen() {
       </ScrollView>
 
       {Platform.OS === 'ios' ? (
-        <Modal animationType="slide" presentationStyle="pageSheet" transparent visible={activeDateField !== null}>
+        <Modal animationType="slide" presentationStyle="overFullScreen" transparent visible={activeDateField !== null}>
           <View style={styles.dateModalOverlay}>
             <View style={styles.dateModalCard}>
               <View style={styles.dateModalHeader}>
