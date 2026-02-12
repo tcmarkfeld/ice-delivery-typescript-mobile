@@ -190,6 +190,7 @@ export default function TomorrowDeliveriesScreen() {
             display="inline"
             mode="date"
             onChange={onDateChange}
+            themeVariant="light"
             value={parseIsoDateKey(
               activeDateField === DateField.Start ? startDate : endDate,
             )}

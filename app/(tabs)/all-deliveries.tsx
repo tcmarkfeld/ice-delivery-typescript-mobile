@@ -743,6 +743,7 @@ export default function AllDeliveriesScreen() {
                   display="inline"
                   mode="date"
                   onChange={onTipDateChange}
+                  themeVariant="light"
                   value={parseIsoDateKey(
                     activeTipDateField === TipDateField.Start
                       ? tipReportStartDateInput

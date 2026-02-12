@@ -1,16 +1,12 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { router } from 'expo-router';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { useLoginMutation } from '@/api/queries/use-auth-mutation';
 import { resolveAuthToken, resolveLoginFailureMessage } from '@/auth/resolve-auth-token';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useSession } from '@/hooks/use-session';
 
 export default function LoginScreen() {
-  const colorScheme = useColorScheme();
-  const isDarkMode = colorScheme === 'dark';
-
   const { setAuthToken } = useSession();
 
   const [email, setEmail] = useState<string>('');
@@ -18,13 +14,6 @@ export default function LoginScreen() {
   const [loginError, setLoginError] = useState<string | null>(null);
 
   const loginMutation = useLoginMutation();
-
-  const screenStyle = useMemo(
-    () => (isDarkMode ? styles.darkScreen : styles.lightScreen),
-    [isDarkMode]
-  );
-  const panelStyle = useMemo(() => (isDarkMode ? styles.darkPanel : styles.lightPanel), [isDarkMode]);
-  const titleStyle = useMemo(() => (isDarkMode ? styles.darkTitle : styles.lightTitle), [isDarkMode]);
 
   const handleLogin = async () => {
     setLoginError(null);
@@ -53,15 +42,15 @@ export default function LoginScreen() {
   };
 
   return (
-    <View style={[styles.screen, screenStyle]}>
-      <View style={[styles.panel, panelStyle]}>
-        <Text style={[styles.title, titleStyle]}>Sign in</Text>
+    <View style={[styles.screen, styles.lightScreen]}>
+      <View style={[styles.panel, styles.lightPanel]}>
+        <Text style={[styles.title, styles.lightTitle]}>Sign in</Text>
         <TextInput
           autoCapitalize="none"
           keyboardType="email-address"
           onChangeText={setEmail}
           placeholder="Email"
-          placeholderTextColor={isDarkMode ? '#8f9ba8' : '#738191'}
+          placeholderTextColor="#738191"
           style={styles.input}
           value={email}
         />
@@ -69,7 +58,7 @@ export default function LoginScreen() {
           autoCapitalize="none"
           onChangeText={setPassword}
           placeholder="Password"
-          placeholderTextColor={isDarkMode ? '#8f9ba8' : '#738191'}
+          placeholderTextColor="#738191"
           secureTextEntry
           style={styles.input}
           value={password}
@@ -100,18 +89,12 @@ const styles = StyleSheet.create({
   lightScreen: {
     backgroundColor: '#f4f7fb',
   },
-  darkScreen: {
-    backgroundColor: '#111827',
-  },
   panel: {
     borderRadius: 12,
     padding: 16,
   },
   lightPanel: {
     backgroundColor: '#ffffff',
-  },
-  darkPanel: {
-    backgroundColor: '#1f2937',
   },
   title: {
     fontSize: 24,
@@ -120,9 +103,6 @@ const styles = StyleSheet.create({
   },
   lightTitle: {
     color: '#0f172a',
-  },
-  darkTitle: {
-    color: '#f8fafc',
   },
   input: {
     backgroundColor: '#ffffff',

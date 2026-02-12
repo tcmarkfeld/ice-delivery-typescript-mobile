@@ -608,7 +608,13 @@ export default function EditDeliveryScreen() {
                   <Text style={styles.dateModalDoneText}>Done</Text>
                 </Pressable>
               </View>
-              <DateTimePicker display="inline" mode="date" onChange={onDateChange} value={selectedDateValue} />
+              <DateTimePicker
+                display="inline"
+                mode="date"
+                onChange={onDateChange}
+                themeVariant="light"
+                value={selectedDateValue}
+              />
             </View>
           </View>
         </Modal>

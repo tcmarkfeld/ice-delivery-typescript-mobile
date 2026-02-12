@@ -51,6 +51,8 @@ enum DateField {
   EndDate = "endDate",
 }
 
+const formPlaceholderTextColor = "#475569";
+
 const addDeliverySchema = z.object({
   customerName: z.string().trim().min(1, "Customer name is required."),
   phoneNumber: z.string().trim().min(1, "Phone is required."),
@@ -302,6 +304,7 @@ export default function AddDeliveryScreen() {
               <TextInput
                 onChangeText={onChange}
                 placeholder="Customer name"
+                placeholderTextColor={formPlaceholderTextColor}
                 style={styles.input}
                 value={value}
               />
@@ -320,6 +323,7 @@ export default function AddDeliveryScreen() {
                   onChange(formatPhoneNumber(nextValue))
                 }
                 placeholder="Phone"
+                placeholderTextColor={formPlaceholderTextColor}
                 style={styles.input}
                 value={value}
               />
@@ -335,6 +339,7 @@ export default function AddDeliveryScreen() {
               <TextInput
                 onChangeText={onChange}
                 placeholder="Delivery address"
+                placeholderTextColor={formPlaceholderTextColor}
                 style={styles.input}
                 value={value}
               />
@@ -352,6 +357,7 @@ export default function AddDeliveryScreen() {
                 keyboardType="email-address"
                 onChangeText={onChange}
                 placeholder="Email (optional)"
+                placeholderTextColor={formPlaceholderTextColor}
                 style={styles.input}
                 value={value}
               />
@@ -391,6 +397,7 @@ export default function AddDeliveryScreen() {
               <TextInput
                 onChangeText={onChange}
                 placeholder="Delivery time (optional)"
+                placeholderTextColor={formPlaceholderTextColor}
                 style={styles.input}
                 value={value}
               />
@@ -489,6 +496,7 @@ export default function AddDeliveryScreen() {
                   onChange(Number.parseInt(nextValue || "0", 10) || 0)
                 }
                 placeholder="Number of coolers"
+                placeholderTextColor={formPlaceholderTextColor}
                 style={styles.input}
                 value={String(value)}
               />
@@ -575,6 +583,7 @@ export default function AddDeliveryScreen() {
                     onChange(Number.parseInt(nextValue || "0", 10) || 0)
                   }
                   placeholder="Limes"
+                  placeholderTextColor={formPlaceholderTextColor}
                   style={[styles.input, styles.halfInput]}
                   value={String(value)}
                 />
@@ -590,6 +599,7 @@ export default function AddDeliveryScreen() {
                     onChange(Number.parseInt(nextValue || "0", 10) || 0)
                   }
                   placeholder="Lemons"
+                  placeholderTextColor={formPlaceholderTextColor}
                   style={[styles.input, styles.halfInput]}
                   value={String(value)}
                 />
@@ -614,6 +624,7 @@ export default function AddDeliveryScreen() {
                     onChange(Number.parseInt(nextValue || "0", 10) || 0)
                   }
                   placeholder="Oranges"
+                  placeholderTextColor={formPlaceholderTextColor}
                   style={[styles.input, styles.halfInput]}
                   value={String(value)}
                 />
@@ -629,6 +640,7 @@ export default function AddDeliveryScreen() {
                     onChange(Number.parseInt(nextValue || "0", 10) || 0)
                   }
                   placeholder="Marg salt"
+                  placeholderTextColor={formPlaceholderTextColor}
                   style={[styles.input, styles.halfInput]}
                   value={String(value)}
                 />
@@ -653,6 +665,7 @@ export default function AddDeliveryScreen() {
                     onChange(Number.parseInt(nextValue || "0", 10) || 0)
                   }
                   placeholder="Freeze pops"
+                  placeholderTextColor={formPlaceholderTextColor}
                   style={[styles.input, styles.halfInput]}
                   value={String(value)}
                 />
@@ -668,6 +681,7 @@ export default function AddDeliveryScreen() {
                     onChange(Number.parseInt(nextValue || "0", 10) || 0)
                   }
                   placeholder="Tip"
+                  placeholderTextColor={formPlaceholderTextColor}
                   style={[styles.input, styles.halfInput]}
                   value={String(value)}
                 />
@@ -684,6 +698,7 @@ export default function AddDeliveryScreen() {
                 multiline
                 onChangeText={onChange}
                 placeholder="Special instructions"
+                placeholderTextColor={formPlaceholderTextColor}
                 style={[styles.input, styles.textArea]}
                 value={value}
               />
@@ -732,6 +747,7 @@ export default function AddDeliveryScreen() {
                 display="inline"
                 mode="date"
                 onChange={onDateChange}
+                themeVariant="light"
                 value={selectedDateValue}
               />
             </View>
