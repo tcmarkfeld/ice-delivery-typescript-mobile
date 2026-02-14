@@ -112,7 +112,8 @@ const callCustomer = async (phone: string): Promise<void> => {
 
 const textCustomer = async (name: string, phone: string): Promise<void> => {
   const firstName = name.split(" ")[0] ?? "there";
-  const message = `Hey ${firstName}, this is Corolla Ice Delivery. Thanks for your business this week.`;
+  const message = `Hey ${firstName}, this is Benicio with Corolla Ice Delivery. Just wanted to thank you for your business this past week and hope you enjoyed! If you would be willing to leave us a Google review we would really appreciate it! 
+  https://g.page/r/CUBe_7herDpHEAE/review`;
   const encodedMessage = encodeURIComponent(message);
 
   await Linking.openURL(`sms:${phone}?body=${encodedMessage}`);
