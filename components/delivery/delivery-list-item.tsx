@@ -4,6 +4,7 @@ import type { ComponentProps } from "react";
 import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { Delivery } from "@/api/types";
+import { addDaysToDateKey } from "@/features/date/date-key-utils";
 import {
   getDateKeyFromIso,
   toCount,
@@ -132,7 +133,8 @@ export const DeliveryListItem = ({
 }: DeliveryListItemProps) => {
   const startDateKey = getDateKeyFromIso(delivery.start_date);
   const endDateKey = getDateKeyFromIso(delivery.end_date);
-  const isPickup = showPickupState && endDateKey === todayDateKey;
+  const yesterdayDateKey = addDaysToDateKey(todayDateKey, -1);
+  const isPickup = showPickupState && endDateKey === yesterdayDateKey;
   const isNew = startDateKey === todayDateKey;
 
   const coolerCount = toCount(delivery.cooler_num);

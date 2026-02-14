@@ -1,4 +1,5 @@
 import { Delivery } from '@/api/types';
+import { addDaysToDateKey } from '@/features/date/date-key-utils';
 
 export enum IceType {
   Bagged = 'bagged ice',
@@ -108,6 +109,7 @@ export const buildDeliverySummary = (
   deliveries: Delivery[],
   todayDateKey: string
 ): DeliverySummary => {
+  const yesterdayDateKey = addDaysToDateKey(todayDateKey, -1);
   const summary: DeliverySummary = {
     bagged40Count: 0,
     bagged62Count: 0,
@@ -129,7 +131,7 @@ export const buildDeliverySummary = (
     const startDateKey = getDateKeyFromIso(delivery.start_date);
     const endDateKey = getDateKeyFromIso(delivery.end_date);
 
-    const isPickupDay = endDateKey === todayDateKey;
+    const isPickupDay = endDateKey === yesterdayDateKey;
 
     if (!isPickupDay) {
       if (iceType === IceType.Loose && coolerSize === CoolerSize.Quart40) {

@@ -38,3 +38,9 @@ export const formatDateRangeLabel = (startDateKey: string, endDateKey: string): 
 
   return `${startLabel} - ${endLabel}`;
 };
+
+export const addDaysToDateKey = (dateKey: string, days: number): string => {
+  const dateValue = parseIsoDateKey(dateKey);
+  dateValue.setDate(dateValue.getDate() + days);
+  return toIsoDateKey(dateValue);
+};
