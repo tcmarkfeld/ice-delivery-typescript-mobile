@@ -369,21 +369,29 @@ export default function AddDeliveryScreen() {
         <View style={styles.sectionCard}>
           <Text style={styles.sectionTitle}>Schedule</Text>
 
-          <Text style={styles.fieldLabel}>Start Date</Text>
+          <Text style={[styles.fieldLabel, styles.priorityFieldLabel]}>
+            Start Date
+          </Text>
           <Pressable
             onPress={() => openDatePicker(DateField.StartDate)}
-            style={[styles.input, styles.dateSelector]}
+            style={[styles.input, styles.dateSelector, styles.priorityDateInput]}
           >
-            <Text style={styles.dateSelectorText}>{startDateValue}</Text>
+            <Text style={[styles.dateSelectorText, styles.priorityDateText]}>
+              {startDateValue}
+            </Text>
           </Pressable>
           {renderFieldError(errors.startDate?.message)}
 
-          <Text style={styles.fieldLabel}>End Date</Text>
+          <Text style={[styles.fieldLabel, styles.priorityFieldLabel]}>
+            End Date
+          </Text>
           <Pressable
             onPress={() => openDatePicker(DateField.EndDate)}
-            style={[styles.input, styles.dateSelector]}
+            style={[styles.input, styles.dateSelector, styles.priorityDateInput]}
           >
-            <Text style={styles.dateSelectorText}>{endDateValue}</Text>
+            <Text style={[styles.dateSelectorText, styles.priorityDateText]}>
+              {endDateValue}
+            </Text>
           </Pressable>
           {renderFieldError(errors.endDate?.message)}
 
@@ -648,29 +656,26 @@ export default function AddDeliveryScreen() {
             />
           </View>
 
-          <View style={styles.doubleLabelRow}>
-            <Text style={[styles.fieldLabel, styles.halfLabel]}>
-              Freeze Pops
-            </Text>
-            <Text style={[styles.fieldLabel, styles.halfLabel]}>Tip</Text>
-          </View>
-          <View style={styles.doubleRow}>
-            <Controller
-              control={control}
-              name="freezePops"
-              render={({ field: { onChange, value } }) => (
-                <TextInput
-                  keyboardType="number-pad"
-                  onChangeText={(nextValue) =>
-                    onChange(Number.parseInt(nextValue || "0", 10) || 0)
-                  }
-                  placeholder="Freeze pops"
-                  placeholderTextColor={formPlaceholderTextColor}
-                  style={[styles.input, styles.halfInput]}
-                  value={String(value)}
-                />
-              )}
-            />
+          <Text style={styles.fieldLabel}>Freeze Pops</Text>
+          <Controller
+            control={control}
+            name="freezePops"
+            render={({ field: { onChange, value } }) => (
+              <TextInput
+                keyboardType="number-pad"
+                onChangeText={(nextValue) =>
+                  onChange(Number.parseInt(nextValue || "0", 10) || 0)
+                }
+                placeholder="Freeze pops"
+                placeholderTextColor={formPlaceholderTextColor}
+                style={styles.input}
+                value={String(value)}
+              />
+            )}
+          />
+
+          <View style={styles.tipHighlightCard}>
+            <Text style={styles.tipHighlightTitle}>Tip</Text>
             <Controller
               control={control}
               name="tip"
@@ -680,9 +685,9 @@ export default function AddDeliveryScreen() {
                   onChangeText={(nextValue) =>
                     onChange(Number.parseInt(nextValue || "0", 10) || 0)
                   }
-                  placeholder="Tip"
+                  placeholder="Tip amount"
                   placeholderTextColor={formPlaceholderTextColor}
-                  style={[styles.input, styles.halfInput]}
+                  style={[styles.input, styles.tipHighlightInput]}
                   value={String(value)}
                 />
               )}
@@ -799,6 +804,12 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     marginBottom: 4,
   },
+  priorityFieldLabel: {
+    color: "#334155",
+    fontSize: 12,
+    fontWeight: "700",
+    marginBottom: 4,
+  },
   inlineLabel: {
     color: "#475569",
     fontSize: 12,
@@ -823,6 +834,20 @@ const styles = StyleSheet.create({
     color: "#0f172a",
     fontSize: 14,
     fontWeight: "600",
+  },
+  priorityDateInput: {
+    backgroundColor: "#f8fbff",
+    borderColor: "#dbeafe",
+    borderWidth: 1,
+    borderRadius: 10,
+    minHeight: 46,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+  },
+  priorityDateText: {
+    color: "#0f172a",
+    fontSize: 15,
+    fontWeight: "700",
   },
   dropdownContainer: {
     marginBottom: 8,
@@ -938,6 +963,32 @@ const styles = StyleSheet.create({
   },
   halfLabel: {
     flex: 1,
+  },
+  tipHighlightCard: {
+    backgroundColor: "#ffffff",
+    borderColor: "#7dd3fc",
+    borderRadius: 10,
+    borderWidth: 1,
+    marginBottom: 8,
+    marginTop: 0,
+    padding: 8,
+  },
+  tipHighlightTitle: {
+    color: "#334155",
+    fontSize: 12,
+    fontWeight: "700",
+    marginBottom: 4,
+  },
+  tipHighlightInput: {
+    backgroundColor: "#ffffff",
+    borderColor: "#dbe5ef",
+    borderRadius: 10,
+    borderWidth: 1,
+    color: "#0f172a",
+    fontSize: 14,
+    fontWeight: "600",
+    marginBottom: 0,
+    minHeight: 44,
   },
   errorText: {
     color: "#b91c1c",

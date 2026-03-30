@@ -33,10 +33,7 @@ import {
   parseIsoDateKey,
   toIsoDateKey,
 } from "@/features/date/date-key-utils";
-import {
-  getBusinessDateKey,
-  sortDeliveries,
-} from "@/features/deliveries/delivery-utils";
+import { getBusinessDateKey } from "@/features/deliveries/delivery-utils";
 import { useSession } from "@/hooks/use-session";
 
 const currencyFormatter = new Intl.NumberFormat("en-US", {
@@ -241,7 +238,8 @@ export default function AllDeliveriesScreen() {
 
   const todayDateKey = getBusinessDateKey();
 
-  const sortedDeliveries = sortDeliveries(allDeliveriesQuery.data ?? []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const deliveries = allDeliveriesQuery.data ?? [];
   const normalizedQuery = searchQuery.trim().toLowerCase();
 
   const dateKeyToUtcDate = (dateKey: string): Date => {
@@ -295,7 +293,7 @@ export default function AllDeliveriesScreen() {
   };
 
   const filteredDeliveries = useMemo(() => {
-    return sortedDeliveries.filter((delivery) => {
+    return deliveries.filter((delivery) => {
       const deliveryStart = delivery.start_date.slice(0, 10);
       const deliveryEnd = delivery.end_date.slice(0, 10);
       const hasStartDateInWeek =
@@ -328,9 +326,9 @@ export default function AllDeliveriesScreen() {
       return searchableText.includes(normalizedQuery);
     });
   }, [
+    deliveries,
     isWeekFilterEnabled,
     normalizedQuery,
-    sortedDeliveries,
     weekRange.endKey,
     weekRange.startKey,
   ]);
