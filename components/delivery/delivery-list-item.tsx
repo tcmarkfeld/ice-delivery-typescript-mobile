@@ -427,6 +427,7 @@ const styles = StyleSheet.create({
   deliveryActions: {
     flexDirection: "row",
     flexWrap: "wrap",
+    justifyContent: "space-between",
     gap: 10,
     marginTop: 2,
   },
@@ -448,7 +449,7 @@ const styles = StyleSheet.create({
   },
   deliveryActionText: {
     color: "#1f6aa5",
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: "600",
   },
   deliveryDeleteActionText: {

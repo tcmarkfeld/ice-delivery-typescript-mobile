@@ -25,7 +25,11 @@ import { z } from "zod";
 import { useCreateDeliveryMutation } from "@/api/queries/use-create-delivery-mutation";
 import { ApiQueryKey } from "@/api/query-keys";
 import { CreateDeliveryInput } from "@/api/types";
-import { parseIsoDateKey, toIsoDateKey } from "@/features/date/date-key-utils";
+import {
+  addDaysToDateKey,
+  parseIsoDateKey,
+  toIsoDateKey,
+} from "@/features/date/date-key-utils";
 import { neighborhoodData } from "@/features/neighborhood/constants";
 import { detectNeighborhoodFromAddress } from "@/features/neighborhood/detect-neighborhood";
 import { useSession } from "@/hooks/use-session";
@@ -52,6 +56,7 @@ enum DateField {
 }
 
 const formPlaceholderTextColor = "#475569";
+const defaultDeliveryDurationDays = 6;
 
 const addDeliverySchema = z.object({
   customerName: z.string().trim().min(1, "Customer name is required."),
@@ -183,6 +188,13 @@ export default function AddDeliveryScreen() {
 
     if (activeDateField === DateField.StartDate) {
       setValue("startDate", isoDate, { shouldValidate: true });
+      setValue(
+        "endDate",
+        addDaysToDateKey(isoDate, defaultDeliveryDurationDays),
+        {
+          shouldValidate: true,
+        },
+      );
     }
 
     if (activeDateField === DateField.EndDate) {
@@ -374,7 +386,11 @@ export default function AddDeliveryScreen() {
           </Text>
           <Pressable
             onPress={() => openDatePicker(DateField.StartDate)}
-            style={[styles.input, styles.dateSelector, styles.priorityDateInput]}
+            style={[
+              styles.input,
+              styles.dateSelector,
+              styles.priorityDateInput,
+            ]}
           >
             <Text style={[styles.dateSelectorText, styles.priorityDateText]}>
               {startDateValue}
@@ -387,7 +403,11 @@ export default function AddDeliveryScreen() {
           </Text>
           <Pressable
             onPress={() => openDatePicker(DateField.EndDate)}
-            style={[styles.input, styles.dateSelector, styles.priorityDateInput]}
+            style={[
+              styles.input,
+              styles.dateSelector,
+              styles.priorityDateInput,
+            ]}
           >
             <Text style={[styles.dateSelectorText, styles.priorityDateText]}>
               {endDateValue}
