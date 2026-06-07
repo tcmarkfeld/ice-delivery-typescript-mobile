@@ -71,13 +71,13 @@ export const getBusinessDateKey = (offsetDays = 0): string => {
 };
 
 const getAddressHouseNumber = (address: string): number => {
-  const houseNumberMatch = address.match(/\d+/);
+  const parsedValue = Number.parseFloat(address);
 
-  if (!houseNumberMatch) {
+  if (Number.isNaN(parsedValue)) {
     return Number.MAX_SAFE_INTEGER;
   }
 
-  return Number.parseInt(houseNumberMatch[0], 10);
+  return parsedValue;
 };
 
 const getNeighborhoodNumber = (neighborhood: string): number => {
@@ -85,20 +85,141 @@ const getNeighborhoodNumber = (neighborhood: string): number => {
   return Number.isNaN(parsedValue) ? Number.MAX_SAFE_INTEGER : parsedValue;
 };
 
+enum DeliveryNeighborhood {
+  OceanHill = 1,
+  Whalehead = 3,
+  PineIsland = 5,
+}
+
+enum WhaleheadAddressPrefix {
+  C = 'C',
+  W = 'W',
+  L = 'L',
+}
+
+const neighborhoodSortOrder = [
+  1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
+];
+
+const neighborhoodSortPriority = new Map<number, number>(
+  neighborhoodSortOrder.map((neighborhood, index) => [neighborhood, index])
+);
+
+const whaleheadAddressPrefixPriority: Record<WhaleheadAddressPrefix, number> = {
+  [WhaleheadAddressPrefix.C]: 0,
+  [WhaleheadAddressPrefix.W]: 1,
+  [WhaleheadAddressPrefix.L]: 2,
+};
+
+const getNeighborhoodSortPriority = (neighborhood: string): number => {
+  return (
+    neighborhoodSortPriority.get(getNeighborhoodNumber(neighborhood)) ??
+    Number.MAX_SAFE_INTEGER
+  );
+};
+
+const getWhaleheadAddressPrefix = (
+  address: string
+): WhaleheadAddressPrefix | null => {
+  const prefix = address.replace(/[^a-zA-Z]/g, '').toUpperCase().slice(0, 1);
+
+  if (prefix === WhaleheadAddressPrefix.C) {
+    return WhaleheadAddressPrefix.C;
+  }
+
+  if (prefix === WhaleheadAddressPrefix.W) {
+    return WhaleheadAddressPrefix.W;
+  }
+
+  if (prefix === WhaleheadAddressPrefix.L) {
+    return WhaleheadAddressPrefix.L;
+  }
+
+  return null;
+};
+
+const getWhaleheadAddressPrefixPriority = (address: string): number => {
+  const prefix = getWhaleheadAddressPrefix(address);
+  return prefix
+    ? whaleheadAddressPrefixPriority[prefix]
+    : Number.MAX_SAFE_INTEGER;
+};
+
+const compareWhaleheadAddresses = (
+  leftAddress: string,
+  rightAddress: string
+): number => {
+  const leftAddressValue = getAddressHouseNumber(leftAddress);
+  const rightAddressValue = getAddressHouseNumber(rightAddress);
+  const hasHighAddress = leftAddressValue > 925 || rightAddressValue > 925;
+
+  if (leftAddressValue !== rightAddressValue) {
+    if (hasHighAddress) {
+      if (leftAddressValue >= 925 && rightAddressValue >= 925) {
+        return (
+          getWhaleheadAddressPrefixPriority(leftAddress) -
+          getWhaleheadAddressPrefixPriority(rightAddress)
+        );
+      }
+
+      if (leftAddressValue >= 925) {
+        return -1;
+      }
+
+      if (rightAddressValue >= 925) {
+        return 1;
+      }
+    }
+
+    return rightAddressValue - leftAddressValue;
+  }
+
+  return (
+    getWhaleheadAddressPrefixPriority(leftAddress) -
+    getWhaleheadAddressPrefixPriority(rightAddress)
+  );
+};
+
+const compareDeliveryAddresses = (left: Delivery, right: Delivery): number => {
+  const neighborhood = getNeighborhoodNumber(left.neighborhood);
+
+  if (
+    neighborhood === DeliveryNeighborhood.OceanHill ||
+    neighborhood === DeliveryNeighborhood.PineIsland
+  ) {
+    return (
+      getAddressHouseNumber(left.delivery_address) -
+      getAddressHouseNumber(right.delivery_address)
+    );
+  }
+
+  if (neighborhood === DeliveryNeighborhood.Whalehead) {
+    return compareWhaleheadAddresses(
+      left.delivery_address,
+      right.delivery_address
+    );
+  }
+
+  return (
+    getAddressHouseNumber(right.delivery_address) -
+    getAddressHouseNumber(left.delivery_address)
+  );
+};
+
 export const sortDeliveries = (deliveries: Delivery[]): Delivery[] => {
   return [...deliveries].sort((left, right) => {
     const neighborhoodDifference =
-      getNeighborhoodNumber(left.neighborhood) - getNeighborhoodNumber(right.neighborhood);
+      getNeighborhoodSortPriority(left.neighborhood) -
+      getNeighborhoodSortPriority(right.neighborhood);
 
     if (neighborhoodDifference !== 0) {
       return neighborhoodDifference;
     }
 
-    const houseNumberDifference =
-      getAddressHouseNumber(left.delivery_address) - getAddressHouseNumber(right.delivery_address);
+    const addressDifference = compareDeliveryAddresses(left, right);
 
-    if (houseNumberDifference !== 0) {
-      return houseNumberDifference;
+    if (addressDifference !== 0) {
+      return addressDifference;
     }
 
     return left.delivery_address.localeCompare(right.delivery_address);
