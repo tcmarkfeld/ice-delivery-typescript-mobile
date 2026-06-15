@@ -106,9 +106,33 @@ type EditDeliveryFormInput = z.input<typeof editDeliverySchema>;
 type EditDeliveryFormOutput = z.output<typeof editDeliverySchema>;
 const allDeliveriesRoute = '/(tabs)/all-deliveries';
 
+const normalizeOptionValue = (value: string): string => value.trim().toLowerCase();
+
+const getCoolerSizeOption = (value: string): CoolerSizeOption => {
+  const normalizedValue = normalizeOptionValue(value);
+
+  if (normalizedValue === normalizeOptionValue(CoolerSizeOption.Quart40)) {
+    return CoolerSizeOption.Quart40;
+  }
+
+  if (normalizedValue === normalizeOptionValue(CoolerSizeOption.Quart200)) {
+    return CoolerSizeOption.Quart200;
+  }
+
+  return CoolerSizeOption.Quart62;
+};
+
+const getIceTypeOption = (value: string): IceTypeOption => {
+  const normalizedValue = normalizeOptionValue(value);
+
+  if (normalizedValue === normalizeOptionValue(IceTypeOption.Bagged)) {
+    return IceTypeOption.Bagged;
+  }
+
+  return IceTypeOption.Loose;
+};
+
 const getDefaultValuesFromDelivery = (delivery: Delivery): EditDeliveryFormInput => {
-  const coolerSizeValue = String(delivery.cooler_size).trim() as CoolerSizeOption;
-  const iceTypeValue = String(delivery.ice_type).trim() as IceTypeOption;
   const dayOrNightValue = String(delivery.dayornight ?? '').trim() as DayOrNightOption;
 
   return {
@@ -119,16 +143,8 @@ const getDefaultValuesFromDelivery = (delivery: Delivery): EditDeliveryFormInput
     specialInstructions: delivery.special_instructions ?? '',
     startDate: sanitizeDateKey(delivery.start_date),
     endDate: sanitizeDateKey(delivery.end_date),
-    coolerSize:
-      coolerSizeValue === CoolerSizeOption.Quart40 ||
-      coolerSizeValue === CoolerSizeOption.Quart62 ||
-      coolerSizeValue === CoolerSizeOption.Quart200
-        ? coolerSizeValue
-        : CoolerSizeOption.Quart62,
-    iceType:
-      iceTypeValue === IceTypeOption.Loose || iceTypeValue === IceTypeOption.Bagged
-        ? iceTypeValue
-        : IceTypeOption.Loose,
+    coolerSize: getCoolerSizeOption(String(delivery.cooler_size)),
+    iceType: getIceTypeOption(String(delivery.ice_type)),
     neighborhood: toCount(delivery.neighborhood),
     coolerCount: toCount(delivery.cooler_num),
     bagLimes: toCount(delivery.bag_limes),
