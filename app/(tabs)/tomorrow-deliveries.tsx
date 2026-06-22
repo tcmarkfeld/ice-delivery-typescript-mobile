@@ -4,7 +4,7 @@ import DateTimePicker, {
   DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
 import { router } from "expo-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -20,6 +20,7 @@ import { useDeliveriesByDateRangeQuery } from "@/api/queries/use-deliveries-quer
 import { Delivery } from "@/api/types";
 import { DeliveryCountSummary } from "@/components/delivery/delivery-count-summary";
 import { DeliveryListItem } from "@/components/delivery/delivery-list-item";
+import { AppTheme } from "@/constants/theme";
 import {
   formatDateRangeLabel,
   parseIsoDateKey,
@@ -30,6 +31,7 @@ import {
   getBusinessDateKey,
   sortDeliveries,
 } from "@/features/deliveries/delivery-utils";
+import { useAppTheme } from "@/hooks/use-app-theme";
 import { useSession } from "@/hooks/use-session";
 
 enum DateField {
@@ -38,6 +40,8 @@ enum DateField {
 }
 
 export default function TomorrowDeliveriesScreen() {
+  const theme = useAppTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const insets = useSafeAreaInsets();
   const { authToken } = useSession();
 
@@ -118,7 +122,7 @@ export default function TomorrowDeliveriesScreen() {
         <View style={styles.titleRow}>
           <Pressable onPress={() => router.back()} style={styles.backButton}>
             <MaterialCommunityIcons
-              color="#0a7ea4"
+              color={theme.colors.primary}
               name="arrow-left"
               size={20}
             />
@@ -130,7 +134,7 @@ export default function TomorrowDeliveriesScreen() {
           style={styles.refreshButton}
         >
           <MaterialCommunityIcons
-            color="#ffffff"
+            color={theme.colors.iconOnPrimary}
             name="refresh-circle"
             size={22}
           />
@@ -190,7 +194,7 @@ export default function TomorrowDeliveriesScreen() {
             display="inline"
             mode="date"
             onChange={onDateChange}
-            themeVariant="light"
+            themeVariant={theme.datePickerVariant}
             value={parseIsoDateKey(
               activeDateField === DateField.Start ? startDate : endDate,
             )}
@@ -248,9 +252,9 @@ export default function TomorrowDeliveriesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: AppTheme) => StyleSheet.create({
   screen: {
-    backgroundColor: "#f3f7fb",
+    backgroundColor: theme.colors.screen,
     flex: 1,
   },
   headerRow: {
@@ -266,13 +270,13 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   pageTitle: {
-    color: "#0f172a",
+    color: theme.colors.text,
     fontSize: 24,
     fontWeight: "800",
   },
   backButton: {
     alignItems: "center",
-    borderColor: "#0a7ea4",
+    borderColor: theme.colors.primary,
     borderRadius: 8,
     borderWidth: 1,
     height: 34,
@@ -281,15 +285,15 @@ const styles = StyleSheet.create({
   },
   refreshButton: {
     alignItems: "center",
-    backgroundColor: "#0a7ea4",
+    backgroundColor: theme.colors.primary,
     borderRadius: 8,
     justifyContent: "center",
     minHeight: 38,
     minWidth: 38,
   },
   dateFilterCard: {
-    backgroundColor: "#ffffff",
-    borderColor: "#dbe5ef",
+    backgroundColor: theme.colors.surface,
+    borderColor: theme.colors.border,
     borderRadius: 12,
     borderWidth: 1,
     marginBottom: 10,
@@ -303,20 +307,20 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   dateFilterTitle: {
-    color: "#0f172a",
+    color: theme.colors.text,
     fontSize: 14,
     fontWeight: "800",
   },
   resetRangeButton: {
-    backgroundColor: "#eff6ff",
-    borderColor: "#bfdbfe",
+    backgroundColor: theme.colors.primaryMuted,
+    borderColor: theme.colors.primary,
     borderRadius: 8,
     borderWidth: 1,
     paddingHorizontal: 10,
     paddingVertical: 6,
   },
   resetRangeButtonText: {
-    color: "#1d4ed8",
+    color: theme.colors.primaryText,
     fontSize: 12,
     fontWeight: "700",
   },
@@ -328,14 +332,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   dateLabel: {
-    color: "#475569",
+    color: theme.colors.textSubtle,
     fontSize: 12,
     fontWeight: "700",
     marginBottom: 4,
   },
   dateSelector: {
-    backgroundColor: "#f8fafc",
-    borderColor: "#cbd5e1",
+    backgroundColor: theme.colors.inputBackground,
+    borderColor: theme.colors.borderStrong,
     borderRadius: 10,
     borderWidth: 1,
     minHeight: 40,
@@ -343,18 +347,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   dateSelectorText: {
-    color: "#0f172a",
+    color: theme.colors.text,
     fontSize: 14,
     fontWeight: "600",
   },
   dateRangeText: {
-    color: "#64748b",
+    color: theme.colors.textSubtle,
     fontSize: 12,
     marginTop: 8,
   },
   iosPickerCard: {
-    backgroundColor: "#ffffff",
-    borderColor: "#dbe5ef",
+    backgroundColor: theme.colors.surface,
+    borderColor: theme.colors.border,
     borderRadius: 12,
     borderWidth: 1,
     marginBottom: 10,
@@ -363,7 +367,7 @@ const styles = StyleSheet.create({
   },
   iosPickerHeader: {
     alignItems: "center",
-    borderBottomColor: "#e2e8f0",
+    borderBottomColor: theme.colors.border,
     borderBottomWidth: 1,
     flexDirection: "row",
     justifyContent: "space-between",
@@ -371,7 +375,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   iosPickerTitle: {
-    color: "#0f172a",
+    color: theme.colors.text,
     fontSize: 13,
     fontWeight: "700",
   },
@@ -380,7 +384,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   iosPickerDoneText: {
-    color: "#0a7ea4",
+    color: theme.colors.primary,
     fontSize: 13,
     fontWeight: "700",
   },
@@ -396,38 +400,38 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   errorText: {
-    color: "#b91c1c",
+    color: theme.colors.danger,
     fontSize: 14,
     marginBottom: 10,
     textAlign: "center",
   },
   retryButton: {
-    backgroundColor: "#0a7ea4",
+    backgroundColor: theme.colors.primary,
     borderRadius: 8,
     paddingHorizontal: 14,
     paddingVertical: 10,
   },
   retryButtonText: {
-    color: "#ffffff",
+    color: theme.colors.iconOnPrimary,
     fontSize: 14,
     fontWeight: "700",
   },
   emptyStateCard: {
     alignItems: "center",
-    backgroundColor: "#ffffff",
-    borderColor: "#dbe5ef",
+    backgroundColor: theme.colors.surface,
+    borderColor: theme.colors.border,
     borderRadius: 12,
     borderWidth: 1,
     paddingHorizontal: 16,
     paddingVertical: 22,
   },
   emptyTitle: {
-    color: "#0f172a",
+    color: theme.colors.text,
     fontSize: 18,
     fontWeight: "800",
   },
   emptyBody: {
-    color: "#64748b",
+    color: theme.colors.textSubtle,
     fontSize: 14,
     marginTop: 6,
     textAlign: "center",

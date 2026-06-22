@@ -1,8 +1,10 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import type { ComponentProps } from 'react';
+import { useMemo, type ComponentProps } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
+import { AddonThemeKey, AppTheme } from '@/constants/theme';
 import { DeliverySummary } from '@/features/deliveries/delivery-utils';
+import { useAppTheme } from '@/hooks/use-app-theme';
 
 interface DeliveryCountSummaryProps {
   heading: string;
@@ -12,6 +14,7 @@ interface DeliveryCountSummaryProps {
 interface SummaryTileProps {
   label: string;
   value: number;
+  theme: AppTheme;
   emphasis?: boolean;
   iconName?: IconName;
   iconColor?: string;
@@ -39,49 +42,18 @@ enum AddonMetricLabel {
   FreezePops = 'Freeze Pops',
 }
 
-interface AddonPalette {
-  backgroundColor: string;
-  borderColor: string;
-  iconColor: string;
-  textColor: string;
-}
-
-const addonPaletteByLabel: Record<AddonMetricLabel, AddonPalette> = {
-  [AddonMetricLabel.Limes]: {
-    backgroundColor: '#ecfdf3',
-    borderColor: '#86efac',
-    iconColor: '#15803d',
-    textColor: '#166534',
-  },
-  [AddonMetricLabel.Lemons]: {
-    backgroundColor: '#fefce8',
-    borderColor: '#fde047',
-    iconColor: '#a16207',
-    textColor: '#854d0e',
-  },
-  [AddonMetricLabel.Oranges]: {
-    backgroundColor: '#fff7ed',
-    borderColor: '#fdba74',
-    iconColor: '#c2410c',
-    textColor: '#9a3412',
-  },
-  [AddonMetricLabel.MargSalt]: {
-    backgroundColor: '#f1f5f9',
-    borderColor: '#cbd5e1',
-    iconColor: '#334155',
-    textColor: '#334155',
-  },
-  [AddonMetricLabel.FreezePops]: {
-    backgroundColor: '#eef2ff',
-    borderColor: '#a5b4fc',
-    iconColor: '#4338ca',
-    textColor: '#3730a3',
-  },
+const addonThemeKeyByLabel: Record<AddonMetricLabel, AddonThemeKey> = {
+  [AddonMetricLabel.Limes]: AddonThemeKey.Limes,
+  [AddonMetricLabel.Lemons]: AddonThemeKey.Lemons,
+  [AddonMetricLabel.Oranges]: AddonThemeKey.Oranges,
+  [AddonMetricLabel.MargSalt]: AddonThemeKey.MargaritaSalt,
+  [AddonMetricLabel.FreezePops]: AddonThemeKey.FreezePops,
 };
 
 const SummaryTile = ({
   label,
   value,
+  theme,
   emphasis = false,
   iconName,
   iconColor,
@@ -90,6 +62,8 @@ const SummaryTile = ({
   backgroundColor,
   borderColor,
 }: SummaryTileProps) => {
+  const styles = useMemo(() => createStyles(theme), [theme]);
+
   return (
     <View
       style={[
@@ -101,7 +75,7 @@ const SummaryTile = ({
       <View style={styles.summaryValueRow}>
         {iconName ? (
           <MaterialCommunityIcons
-            color={iconColor ?? (emphasis ? '#075985' : '#1e3a8a')}
+            color={iconColor ?? (emphasis ? theme.colors.primary : theme.colors.primaryText)}
             name={iconName}
             size={15}
             style={styles.summaryTileIcon}
@@ -129,6 +103,9 @@ const SummaryTile = ({
 };
 
 export const DeliveryCountSummary = ({ heading, summary }: DeliveryCountSummaryProps) => {
+  const theme = useAppTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
+  const colors = theme.colors;
   const coolerMetrics = [
     { label: '62 Loose', value: summary.loose62Count },
     { label: '40 Loose', value: summary.loose40Count },
@@ -166,7 +143,7 @@ export const DeliveryCountSummary = ({ heading, summary }: DeliveryCountSummaryP
       <View style={styles.summaryHeader}>
         <Text style={styles.summaryHeading}>{heading}</Text>
         {summary.totalIceBags > 0 ? (
-          <SummaryTile emphasis label="Total Bags" value={summary.totalIceBags} />
+          <SummaryTile emphasis label="Total Bags" theme={theme} value={summary.totalIceBags} />
         ) : null}
       </View>
 
@@ -175,7 +152,7 @@ export const DeliveryCountSummary = ({ heading, summary }: DeliveryCountSummaryP
           <Text style={styles.summarySectionTitle}>Coolers</Text>
           <View style={styles.summaryGrid}>
             {coolerMetrics.map((metric) => (
-              <SummaryTile key={metric.label} label={metric.label} value={metric.value} />
+              <SummaryTile key={metric.label} label={metric.label} theme={theme} value={metric.value} />
             ))}
           </View>
         </>
@@ -187,19 +164,24 @@ export const DeliveryCountSummary = ({ heading, summary }: DeliveryCountSummaryP
         <>
           <Text style={styles.summarySectionTitle}>Add-ons</Text>
           <View style={styles.summaryGrid}>
-            {addonMetrics.map((metric) => (
-              <SummaryTile
-                backgroundColor={addonPaletteByLabel[metric.label].backgroundColor}
-                borderColor={addonPaletteByLabel[metric.label].borderColor}
-                iconName={metric.iconName}
-                iconColor={addonPaletteByLabel[metric.label].iconColor}
-                key={metric.label}
-                labelColor={addonPaletteByLabel[metric.label].textColor}
-                label={metric.label}
-                value={metric.value}
-                valueColor={addonPaletteByLabel[metric.label].textColor}
-              />
-            ))}
+            {addonMetrics.map((metric) => {
+              const addonPalette = colors.addon[addonThemeKeyByLabel[metric.label]];
+
+              return (
+                <SummaryTile
+                  backgroundColor={addonPalette.backgroundColor}
+                  borderColor={addonPalette.borderColor}
+                  iconName={metric.iconName}
+                  iconColor={addonPalette.iconColor}
+                  key={metric.label}
+                  labelColor={addonPalette.textColor}
+                  label={metric.label}
+                  theme={theme}
+                  value={metric.value}
+                  valueColor={addonPalette.textColor}
+                />
+              );
+            })}
           </View>
         </>
       ) : null}
@@ -207,10 +189,10 @@ export const DeliveryCountSummary = ({ heading, summary }: DeliveryCountSummaryP
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (theme: AppTheme) => StyleSheet.create({
   summaryCard: {
-    backgroundColor: '#ffffff',
-    borderColor: '#dbe5ef',
+    backgroundColor: theme.colors.surface,
+    borderColor: theme.colors.border,
     borderRadius: 14,
     borderWidth: 1,
     marginBottom: 8,
@@ -223,12 +205,12 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   summaryHeading: {
-    color: '#0f172a',
+    color: theme.colors.text,
     fontSize: 15,
     fontWeight: '800',
   },
   summarySectionTitle: {
-    color: '#475569',
+    color: theme.colors.textSubtle,
     fontSize: 11,
     fontWeight: '700',
     letterSpacing: 0.35,
@@ -241,13 +223,13 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   summaryDivider: {
-    backgroundColor: '#e2e8f0',
+    backgroundColor: theme.colors.border,
     height: 1,
     marginVertical: 8,
   },
   summaryTile: {
-    backgroundColor: '#f8fafc',
-    borderColor: '#e2e8f0',
+    backgroundColor: theme.colors.tileSurface,
+    borderColor: theme.colors.border,
     borderRadius: 9,
     borderWidth: 1,
     minWidth: 84,
@@ -263,24 +245,24 @@ const styles = StyleSheet.create({
     marginBottom: 0,
   },
   summaryTileEmphasis: {
-    backgroundColor: '#e0f2fe',
-    borderColor: '#7dd3fc',
+    backgroundColor: theme.colors.tileEmphasisSurface,
+    borderColor: theme.colors.tileEmphasisBorder,
   },
   summaryValue: {
-    color: '#0f172a',
+    color: theme.colors.text,
     fontSize: 15,
     fontWeight: '800',
   },
   summaryValueEmphasis: {
-    color: '#075985',
+    color: theme.colors.primary,
     fontSize: 17,
   },
   summaryLabel: {
-    color: '#475569',
+    color: theme.colors.textSubtle,
     fontSize: 11,
     marginTop: 1,
   },
   summaryLabelEmphasis: {
-    color: '#0c4a6e',
+    color: theme.colors.primaryText,
   },
 });

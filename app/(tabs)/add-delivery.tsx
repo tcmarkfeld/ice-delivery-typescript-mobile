@@ -25,6 +25,7 @@ import { z } from "zod";
 import { useCreateDeliveryMutation } from "@/api/queries/use-create-delivery-mutation";
 import { ApiQueryKey } from "@/api/query-keys";
 import { CreateDeliveryInput } from "@/api/types";
+import { AppTheme } from "@/constants/theme";
 import {
   addDaysToDateKey,
   parseIsoDateKey,
@@ -32,6 +33,7 @@ import {
 } from "@/features/date/date-key-utils";
 import { neighborhoodData } from "@/features/neighborhood/constants";
 import { detectNeighborhoodFromAddress } from "@/features/neighborhood/detect-neighborhood";
+import { useAppTheme } from "@/hooks/use-app-theme";
 import { useSession } from "@/hooks/use-session";
 
 enum IceTypeOption {
@@ -55,7 +57,6 @@ enum DateField {
   EndDate = "endDate",
 }
 
-const formPlaceholderTextColor = "#475569";
 const defaultDeliveryDurationDays = 6;
 
 const addDeliverySchema = z.object({
@@ -113,7 +114,10 @@ const addDeliveryDefaultValues: AddDeliveryFormInput = {
   dayOrNight: undefined,
 };
 
-const renderFieldError = (message?: string) => {
+const renderFieldError = (
+  message: string | undefined,
+  styles: ReturnType<typeof createStyles>,
+) => {
   if (!message) {
     return null;
   }
@@ -141,11 +145,14 @@ const formatPhoneNumber = (rawValue: string): string => {
 };
 
 export default function AddDeliveryScreen() {
+  const theme = useAppTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
   const { authToken } = useSession();
 
   const createDeliveryMutation = useCreateDeliveryMutation();
+  const formPlaceholderTextColor = theme.colors.textSubtle;
 
   const [activeDateField, setActiveDateField] = useState<DateField | null>(
     null,
@@ -322,7 +329,7 @@ export default function AddDeliveryScreen() {
               />
             )}
           />
-          {renderFieldError(errors.customerName?.message)}
+          {renderFieldError(errors.customerName?.message, styles)}
 
           <Text style={styles.fieldLabel}>Phone</Text>
           <Controller
@@ -341,7 +348,7 @@ export default function AddDeliveryScreen() {
               />
             )}
           />
-          {renderFieldError(errors.phoneNumber?.message)}
+          {renderFieldError(errors.phoneNumber?.message, styles)}
 
           <Text style={styles.fieldLabel}>Delivery Address</Text>
           <Controller
@@ -357,7 +364,7 @@ export default function AddDeliveryScreen() {
               />
             )}
           />
-          {renderFieldError(errors.deliveryAddress?.message)}
+          {renderFieldError(errors.deliveryAddress?.message, styles)}
 
           <Text style={styles.fieldLabel}>Email</Text>
           <Controller
@@ -375,7 +382,7 @@ export default function AddDeliveryScreen() {
               />
             )}
           />
-          {renderFieldError(errors.email?.message)}
+          {renderFieldError(errors.email?.message, styles)}
         </View>
 
         <View style={styles.sectionCard}>
@@ -396,7 +403,7 @@ export default function AddDeliveryScreen() {
               {startDateValue}
             </Text>
           </Pressable>
-          {renderFieldError(errors.startDate?.message)}
+          {renderFieldError(errors.startDate?.message, styles)}
 
           <Text style={[styles.fieldLabel, styles.priorityFieldLabel]}>
             End Date
@@ -413,7 +420,7 @@ export default function AddDeliveryScreen() {
               {endDateValue}
             </Text>
           </Pressable>
-          {renderFieldError(errors.endDate?.message)}
+          {renderFieldError(errors.endDate?.message, styles)}
 
           <Text style={styles.fieldLabel}>
             Delivery Time First Day (Optional)
@@ -511,7 +518,7 @@ export default function AddDeliveryScreen() {
               </View>
             )}
           />
-          {renderFieldError(errors.neighborhood?.message)}
+          {renderFieldError(errors.neighborhood?.message, styles)}
 
           <Text style={styles.fieldLabel}>Number of Coolers</Text>
           <Controller
@@ -530,7 +537,7 @@ export default function AddDeliveryScreen() {
               />
             )}
           />
-          {renderFieldError(errors.coolerCount?.message)}
+          {renderFieldError(errors.coolerCount?.message, styles)}
 
           <Text style={styles.fieldLabel}>Cooler Size</Text>
           <Controller
@@ -743,7 +750,7 @@ export default function AddDeliveryScreen() {
           style={styles.submitButton}
         >
           {createDeliveryMutation.isPending ? (
-            <ActivityIndicator color="#ffffff" />
+            <ActivityIndicator color={theme.colors.iconOnPrimary} />
           ) : (
             <Text style={styles.submitButtonText}>Create Delivery</Text>
           )}
@@ -772,7 +779,7 @@ export default function AddDeliveryScreen() {
                 display="inline"
                 mode="date"
                 onChange={onDateChange}
-                themeVariant="light"
+                themeVariant={theme.datePickerVariant}
                 value={selectedDateValue}
               />
             </View>
@@ -783,9 +790,9 @@ export default function AddDeliveryScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: AppTheme) => StyleSheet.create({
   screen: {
-    backgroundColor: "#f3f7fb",
+    backgroundColor: theme.colors.screen,
     flex: 1,
   },
   content: {
@@ -799,19 +806,19 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   pageTitle: {
-    color: "#0f172a",
+    color: theme.colors.text,
     fontSize: 24,
     fontWeight: "800",
   },
   sectionCard: {
-    backgroundColor: "#ffffff",
-    borderColor: "#dbe5ef",
+    backgroundColor: theme.colors.surface,
+    borderColor: theme.colors.border,
     borderRadius: 12,
     borderWidth: 1,
     padding: 12,
   },
   sectionTitle: {
-    color: "#334155",
+    color: theme.colors.textMuted,
     fontSize: 12,
     fontWeight: "700",
     letterSpacing: 0.3,
@@ -819,30 +826,30 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
   },
   fieldLabel: {
-    color: "#334155",
+    color: theme.colors.textMuted,
     fontSize: 12,
     fontWeight: "700",
     marginBottom: 4,
   },
   priorityFieldLabel: {
-    color: "#334155",
+    color: theme.colors.textMuted,
     fontSize: 12,
     fontWeight: "700",
     marginBottom: 4,
   },
   inlineLabel: {
-    color: "#475569",
+    color: theme.colors.textSubtle,
     fontSize: 12,
     fontWeight: "600",
     marginBottom: 6,
     marginTop: 4,
   },
   input: {
-    backgroundColor: "#f8fafc",
-    borderColor: "#dbe5ef",
+    backgroundColor: theme.colors.inputBackground,
+    borderColor: theme.colors.border,
     borderRadius: 10,
     borderWidth: 1,
-    color: "#0f172a",
+    color: theme.colors.text,
     marginBottom: 8,
     paddingHorizontal: 12,
     paddingVertical: 10,
@@ -851,13 +858,13 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   dateSelectorText: {
-    color: "#0f172a",
+    color: theme.colors.text,
     fontSize: 14,
     fontWeight: "600",
   },
   priorityDateInput: {
-    backgroundColor: "#f8fbff",
-    borderColor: "#dbeafe",
+    backgroundColor: theme.colors.inputBackground,
+    borderColor: theme.colors.primaryMuted,
     borderWidth: 1,
     borderRadius: 10,
     minHeight: 46,
@@ -865,7 +872,7 @@ const styles = StyleSheet.create({
     paddingVertical: 9,
   },
   priorityDateText: {
-    color: "#0f172a",
+    color: theme.colors.text,
     fontSize: 15,
     fontWeight: "700",
   },
@@ -877,13 +884,13 @@ const styles = StyleSheet.create({
     marginBottom: 0,
   },
   dropdownButtonText: {
-    color: "#0f172a",
+    color: theme.colors.text,
     fontSize: 14,
     fontWeight: "600",
   },
   dropdownMenu: {
-    backgroundColor: "#ffffff",
-    borderColor: "#dbe5ef",
+    backgroundColor: theme.colors.surfaceRaised,
+    borderColor: theme.colors.border,
     borderRadius: 10,
     borderWidth: 1,
     marginTop: 6,
@@ -894,22 +901,22 @@ const styles = StyleSheet.create({
     maxHeight: 220,
   },
   dropdownItem: {
-    borderBottomColor: "#e2e8f0",
+    borderBottomColor: theme.colors.border,
     borderBottomWidth: StyleSheet.hairlineWidth,
     paddingHorizontal: 12,
     paddingVertical: 10,
   },
   dropdownItemText: {
-    color: "#334155",
+    color: theme.colors.textMuted,
     fontSize: 14,
   },
   dateModalOverlay: {
-    backgroundColor: "rgba(15, 23, 42, 0.35)",
+    backgroundColor: theme.colors.overlay,
     flex: 1,
     justifyContent: "flex-end",
   },
   dateModalCard: {
-    backgroundColor: "#ffffff",
+    backgroundColor: theme.colors.surface,
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
     paddingBottom: 24,
@@ -924,18 +931,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   dateModalTitle: {
-    color: "#0f172a",
+    color: theme.colors.text,
     fontSize: 16,
     fontWeight: "700",
   },
   dateModalDoneButton: {
-    backgroundColor: "#0a7ea4",
+    backgroundColor: theme.colors.primary,
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 6,
   },
   dateModalDoneText: {
-    color: "#ffffff",
+    color: theme.colors.iconOnPrimary,
     fontSize: 12,
     fontWeight: "700",
   },
@@ -950,24 +957,24 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   choiceButton: {
-    backgroundColor: "#f8fafc",
-    borderColor: "#dbe5ef",
+    backgroundColor: theme.colors.inputBackground,
+    borderColor: theme.colors.border,
     borderRadius: 8,
     borderWidth: 1,
     paddingHorizontal: 10,
     paddingVertical: 8,
   },
   choiceButtonActive: {
-    backgroundColor: "#dbeafe",
-    borderColor: "#0a7ea4",
+    backgroundColor: theme.colors.primaryMuted,
+    borderColor: theme.colors.primary,
   },
   choiceButtonText: {
-    color: "#475569",
+    color: theme.colors.textSubtle,
     fontSize: 12,
     fontWeight: "600",
   },
   choiceButtonTextActive: {
-    color: "#0a7ea4",
+    color: theme.colors.primary,
     fontWeight: "700",
   },
   doubleRow: {
@@ -985,8 +992,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   tipHighlightCard: {
-    backgroundColor: "#ffffff",
-    borderColor: "#7dd3fc",
+    backgroundColor: theme.colors.surface,
+    borderColor: theme.colors.tileEmphasisBorder,
     borderRadius: 10,
     borderWidth: 1,
     marginBottom: 8,
@@ -994,24 +1001,24 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   tipHighlightTitle: {
-    color: "#334155",
+    color: theme.colors.textMuted,
     fontSize: 12,
     fontWeight: "700",
     marginBottom: 4,
   },
   tipHighlightInput: {
-    backgroundColor: "#ffffff",
-    borderColor: "#dbe5ef",
+    backgroundColor: theme.colors.inputBackground,
+    borderColor: theme.colors.border,
     borderRadius: 10,
     borderWidth: 1,
-    color: "#0f172a",
+    color: theme.colors.text,
     fontSize: 14,
     fontWeight: "600",
     marginBottom: 0,
     minHeight: 44,
   },
   errorText: {
-    color: "#b91c1c",
+    color: theme.colors.danger,
     fontSize: 13,
     fontWeight: "600",
     marginBottom: 8,
@@ -1019,13 +1026,13 @@ const styles = StyleSheet.create({
   },
   submitButton: {
     alignItems: "center",
-    backgroundColor: "#0a7ea4",
+    backgroundColor: theme.colors.primary,
     borderRadius: 10,
     marginTop: 4,
     paddingVertical: 12,
   },
   submitButtonText: {
-    color: "#ffffff",
+    color: theme.colors.iconOnPrimary,
     fontSize: 15,
     fontWeight: "700",
   },

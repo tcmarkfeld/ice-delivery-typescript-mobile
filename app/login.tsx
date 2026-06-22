@@ -1,12 +1,16 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { router } from 'expo-router';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { useLoginMutation } from '@/api/queries/use-auth-mutation';
 import { resolveAuthToken, resolveLoginFailureMessage } from '@/auth/resolve-auth-token';
+import { AppTheme } from '@/constants/theme';
+import { useAppTheme } from '@/hooks/use-app-theme';
 import { useSession } from '@/hooks/use-session';
 
 export default function LoginScreen() {
+  const theme = useAppTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const { setAuthToken } = useSession();
 
   const [email, setEmail] = useState<string>('');
@@ -42,15 +46,15 @@ export default function LoginScreen() {
   };
 
   return (
-    <View style={[styles.screen, styles.lightScreen]}>
-      <View style={[styles.panel, styles.lightPanel]}>
-        <Text style={[styles.title, styles.lightTitle]}>Sign in</Text>
+    <View style={styles.screen}>
+      <View style={styles.panel}>
+        <Text style={styles.title}>Sign in</Text>
         <TextInput
           autoCapitalize="none"
           keyboardType="email-address"
           onChangeText={setEmail}
           placeholder="Email"
-          placeholderTextColor="#738191"
+          placeholderTextColor={theme.colors.textSubtle}
           style={styles.input}
           value={email}
         />
@@ -58,7 +62,7 @@ export default function LoginScreen() {
           autoCapitalize="none"
           onChangeText={setPassword}
           placeholder="Password"
-          placeholderTextColor="#738191"
+          placeholderTextColor={theme.colors.textSubtle}
           secureTextEntry
           style={styles.input}
           value={password}
@@ -79,43 +83,38 @@ export default function LoginScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: AppTheme) => StyleSheet.create({
   screen: {
+    backgroundColor: theme.colors.screen,
     flex: 1,
     justifyContent: 'center',
     paddingHorizontal: 16,
     paddingVertical: 20,
   },
-  lightScreen: {
-    backgroundColor: '#f4f7fb',
-  },
   panel: {
+    backgroundColor: theme.colors.surface,
     borderRadius: 12,
     padding: 16,
   },
-  lightPanel: {
-    backgroundColor: '#ffffff',
-  },
   title: {
+    color: theme.colors.text,
     fontSize: 24,
     fontWeight: '700',
     marginBottom: 12,
   },
-  lightTitle: {
-    color: '#0f172a',
-  },
   input: {
-    backgroundColor: '#ffffff',
-    borderColor: '#d2dae4',
+    backgroundColor: theme.colors.inputBackground,
+    borderColor: theme.colors.border,
     borderRadius: 8,
     borderWidth: 1,
+    color: theme.colors.text,
     marginBottom: 12,
     paddingHorizontal: 12,
     paddingVertical: 10,
   },
   primaryButton: {
     alignItems: 'center',
-    backgroundColor: '#0a7ea4',
+    backgroundColor: theme.colors.primary,
     borderRadius: 8,
     marginTop: 8,
     paddingVertical: 11,
@@ -127,12 +126,12 @@ const styles = StyleSheet.create({
     opacity: 0.85,
   },
   primaryButtonText: {
-    color: '#ffffff',
+    color: theme.colors.iconOnPrimary,
     fontSize: 15,
     fontWeight: '600',
   },
   errorText: {
-    color: '#dc2626',
+    color: theme.colors.danger,
     fontSize: 14,
     marginTop: 2,
   },

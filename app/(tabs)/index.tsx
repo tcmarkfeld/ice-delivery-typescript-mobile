@@ -1,6 +1,6 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -20,9 +20,13 @@ import {
   getBusinessDateKey,
   sortDeliveries,
 } from "@/features/deliveries/delivery-utils";
+import { AppTheme } from "@/constants/theme";
+import { useAppTheme } from "@/hooks/use-app-theme";
 import { useSession } from "@/hooks/use-session";
 
 export default function TodayDeliveriesScreen() {
+  const theme = useAppTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const insets = useSafeAreaInsets();
   const { authToken, clearAuthToken } = useSession();
   const deliveriesQuery = useTodayDeliveriesQuery(authToken);
@@ -56,7 +60,7 @@ export default function TodayDeliveriesScreen() {
             style={styles.refreshButton}
           >
             <MaterialCommunityIcons
-              color="#ffffff"
+              color={theme.colors.iconOnPrimary}
               name="refresh-circle"
               size={22}
             />
@@ -135,9 +139,9 @@ export default function TodayDeliveriesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: AppTheme) => StyleSheet.create({
   screen: {
-    backgroundColor: "#f3f7fb",
+    backgroundColor: theme.colors.screen,
     flex: 1,
   },
   headerRow: {
@@ -148,12 +152,12 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
   },
   pageTitle: {
-    color: "#0f172a",
+    color: theme.colors.text,
     fontSize: 24,
     fontWeight: "800",
   },
   tomorrowLinkText: {
-    color: "#0a7ea4",
+    color: theme.colors.primary,
     fontSize: 17,
     fontWeight: "600",
     marginTop: 2,
@@ -164,21 +168,21 @@ const styles = StyleSheet.create({
   },
   refreshButton: {
     alignItems: "center",
-    backgroundColor: "#0a7ea4",
+    backgroundColor: theme.colors.primary,
     borderRadius: 8,
     justifyContent: "center",
     minHeight: 38,
     minWidth: 38,
   },
   logoutButton: {
-    borderColor: "#0a7ea4",
+    borderColor: theme.colors.primary,
     borderRadius: 8,
     borderWidth: 1,
     paddingHorizontal: 12,
     paddingVertical: 8,
   },
   logoutButtonText: {
-    color: "#0a7ea4",
+    color: theme.colors.primary,
     fontSize: 13,
     fontWeight: "700",
   },
@@ -194,38 +198,38 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   errorText: {
-    color: "#b91c1c",
+    color: theme.colors.danger,
     fontSize: 14,
     marginBottom: 10,
     textAlign: "center",
   },
   retryButton: {
-    backgroundColor: "#0a7ea4",
+    backgroundColor: theme.colors.primary,
     borderRadius: 8,
     paddingHorizontal: 14,
     paddingVertical: 10,
   },
   retryButtonText: {
-    color: "#ffffff",
+    color: theme.colors.iconOnPrimary,
     fontSize: 14,
     fontWeight: "700",
   },
   emptyStateCard: {
     alignItems: "center",
-    backgroundColor: "#ffffff",
-    borderColor: "#dbe5ef",
+    backgroundColor: theme.colors.surface,
+    borderColor: theme.colors.border,
     borderRadius: 12,
     borderWidth: 1,
     paddingHorizontal: 16,
     paddingVertical: 22,
   },
   emptyTitle: {
-    color: "#0f172a",
+    color: theme.colors.text,
     fontSize: 18,
     fontWeight: "800",
   },
   emptyBody: {
-    color: "#64748b",
+    color: theme.colors.textSubtle,
     fontSize: 14,
     marginTop: 6,
     textAlign: "center",

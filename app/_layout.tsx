@@ -1,11 +1,13 @@
-import { DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import 'react-native-reanimated';
 
 import { SessionProvider } from '@/auth/session-provider';
+import { useAppTheme } from '@/hooks/use-app-theme';
 import { useSession } from '@/hooks/use-session';
+import { AppThemeProvider } from '@/providers/app-theme-provider';
 import { QueryProvider } from '@/providers/query-provider';
 
 function RootNavigator() {
@@ -35,16 +37,28 @@ function RootNavigator() {
   );
 }
 
-export default function RootLayout() {
+function ThemedRootLayout() {
+  const appTheme = useAppTheme();
+  const navigationTheme = appTheme.scheme === 'dark' ? DarkTheme : DefaultTheme;
+  const statusBarStyle = appTheme.scheme === 'dark' ? 'light' : 'dark';
+
   return (
     <SessionProvider>
       <QueryProvider>
-        <ThemeProvider value={DefaultTheme}>
+        <ThemeProvider value={navigationTheme}>
           <RootNavigator />
-          <StatusBar style="dark" />
+          <StatusBar style={statusBarStyle} />
         </ThemeProvider>
       </QueryProvider>
     </SessionProvider>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <AppThemeProvider>
+      <ThemedRootLayout />
+    </AppThemeProvider>
   );
 }
 
