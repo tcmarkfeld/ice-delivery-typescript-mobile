@@ -1,7 +1,7 @@
-import { useMutation } from '@tanstack/react-query';
+import { useMutation } from "@tanstack/react-query";
 
-import { deleteDeliveryById } from '@/api/delivery-api';
-import { unwrapApiResult } from '@/api/unwrap-api-result';
+import { deleteDeliveryById } from "@/api/delivery-api";
+import { unwrapApiResult } from "@/api/unwrap-api-result";
 
 export interface DeleteDeliveryMutationInput {
   id: string;

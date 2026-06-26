@@ -28,6 +28,7 @@ import {
 import { ApiQueryKey } from "@/api/query-keys";
 import { Delivery } from "@/api/types";
 import { DeliveryListItem } from "@/components/delivery/delivery-list-item";
+import { floatingTabBarContentBottomPadding } from "@/constants/navigation";
 import { AppTheme } from "@/constants/theme";
 import {
   isValidDateKey,
@@ -38,6 +39,7 @@ import { getBusinessDateKey } from "@/features/deliveries/delivery-utils";
 import { useAppTheme } from "@/hooks/use-app-theme";
 import { useSession } from "@/hooks/use-session";
 import { useThemeMode } from "@/providers/app-theme-provider";
+import { useFloatingTabBar } from "@/providers/floating-tab-bar-provider";
 
 const currencyFormatter = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -221,6 +223,7 @@ export default function AllDeliveriesScreen() {
   const { toggleThemeMode } = useThemeMode();
   const insets = useSafeAreaInsets();
   const { authToken } = useSession();
+  const { handleScroll } = useFloatingTabBar();
   const queryClient = useQueryClient();
   const allDeliveriesQuery = useAllDeliveriesQuery(authToken);
   const deleteDeliveryMutation = useDeleteDeliveryMutation();
@@ -507,7 +510,8 @@ export default function AllDeliveriesScreen() {
       ],
     );
   };
-  const themeToggleIconName = theme.scheme === "dark" ? "weather-sunny" : "weather-night";
+  const themeToggleIconName =
+    theme.scheme === "dark" ? "white-balance-sunny" : "moon-waxing-crescent";
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top + 8 }]}>
@@ -649,6 +653,7 @@ export default function AllDeliveriesScreen() {
           contentContainerStyle={styles.listContent}
           data={filteredDeliveries}
           keyExtractor={(item, index) => `${String(item.id)}-${index}`}
+          onScroll={handleScroll}
           onRefresh={() => allDeliveriesQuery.refetch()}
           refreshing={allDeliveriesQuery.isRefetching}
           renderItem={({ item }: { item: Delivery }) => (
@@ -677,6 +682,7 @@ export default function AllDeliveriesScreen() {
               </Text>
             </View>
           }
+          scrollEventThrottle={16}
         />
       ) : null}
 
@@ -780,7 +786,10 @@ export default function AllDeliveriesScreen() {
               ]}
             >
               {tipReportQuery.isFetching ? (
-                <ActivityIndicator color={theme.colors.iconOnPrimary} size="small" />
+                <ActivityIndicator
+                  color={theme.colors.iconOnPrimary}
+                  size="small"
+                />
               ) : (
                 <MaterialCommunityIcons
                   color={theme.colors.iconOnPrimary}
@@ -826,385 +835,386 @@ export default function AllDeliveriesScreen() {
   );
 }
 
-const createStyles = (theme: AppTheme) => StyleSheet.create({
-  screen: {
-    backgroundColor: theme.colors.screen,
-    flex: 1,
-  },
-  headerRow: {
-    alignItems: "center",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingBottom: 12,
-  },
-  pageTitle: {
-    color: theme.colors.text,
-    fontSize: 24,
-    fontWeight: "800",
-  },
-  headerActions: {
-    flexDirection: "row",
-    gap: 8,
-  },
-  refreshButton: {
-    alignItems: "center",
-    backgroundColor: theme.colors.primary,
-    borderRadius: 8,
-    justifyContent: "center",
-    minHeight: 38,
-    minWidth: 38,
-  },
-  tipButton: {
-    alignItems: "center",
-    backgroundColor: theme.colors.success,
-    borderRadius: 8,
-    justifyContent: "center",
-    minHeight: 38,
-    minWidth: 38,
-  },
-  themeToggleButton: {
-    alignItems: "center",
-    backgroundColor: theme.colors.primaryMuted,
-    borderColor: theme.colors.primary,
-    borderRadius: 8,
-    borderWidth: 1,
-    justifyContent: "center",
-    minHeight: 38,
-    minWidth: 38,
-  },
-  searchContainer: {
-    paddingHorizontal: 16,
-    paddingBottom: 10,
-  },
-  searchInput: {
-    backgroundColor: theme.colors.inputBackground,
-    borderColor: theme.colors.border,
-    borderRadius: 10,
-    borderWidth: 1,
-    color: theme.colors.text,
-    fontSize: 14,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-  },
-  filterCard: {
-    backgroundColor: theme.colors.surface,
-    borderColor: theme.colors.border,
-    borderRadius: 12,
-    borderWidth: 1,
-    marginHorizontal: 16,
-    marginBottom: 10,
-    padding: 10,
-  },
-  filterCardHeader: {
-    alignItems: "center",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 8,
-  },
-  filterCardTitle: {
-    color: theme.colors.textMuted,
-    fontSize: 12,
-    fontWeight: "700",
-    letterSpacing: 0.3,
-    textTransform: "uppercase",
-  },
-  weekFilterContainer: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: 8,
-  },
-  weekModeButton: {
-    borderRadius: 999,
-    borderWidth: 1,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  weekModeButtonEnabled: {
-    backgroundColor: theme.colors.successMuted,
-    borderColor: theme.colors.success,
-  },
-  weekModeButtonDisabled: {
-    backgroundColor: theme.colors.inputBackground,
-    borderColor: theme.colors.borderStrong,
-  },
-  weekModeButtonText: {
-    fontSize: 12,
-    fontWeight: "700",
-  },
-  weekModeButtonTextEnabled: {
-    color: theme.colors.success,
-  },
-  weekModeButtonTextDisabled: {
-    color: theme.colors.textSubtle,
-  },
-  weekButton: {
-    backgroundColor: theme.colors.disabledSurface,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  weekButtonDisabled: {
-    opacity: 0.45,
-  },
-  weekButtonText: {
-    color: theme.colors.text,
-    fontSize: 12,
-    fontWeight: "700",
-  },
-  weekLabelContainer: {
-    backgroundColor: theme.colors.inputBackground,
-    borderColor: theme.colors.border,
-    borderRadius: 8,
-    borderWidth: 1,
-    flex: 1,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-  },
-  weekLabel: {
-    color: theme.colors.textMuted,
-    fontSize: 13,
-    fontWeight: "600",
-    textAlign: "center",
-  },
-  weekResetContainer: {
-    paddingHorizontal: 16,
-    paddingBottom: 10,
-  },
-  weekResetButton: {
-    alignSelf: "flex-start",
-    borderColor: theme.colors.primary,
-    borderRadius: 8,
-    borderWidth: 1,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-  },
-  weekResetButtonText: {
-    color: theme.colors.primary,
-    fontSize: 12,
-    fontWeight: "700",
-  },
-  listContent: {
-    gap: 10,
-    paddingBottom: 20,
-    paddingHorizontal: 16,
-  },
-  centeredScreen: {
-    alignItems: "center",
-    flex: 1,
-    justifyContent: "center",
-    paddingHorizontal: 16,
-  },
-  errorText: {
-    color: theme.colors.danger,
-    fontSize: 14,
-    marginBottom: 10,
-    textAlign: "center",
-  },
-  retryButton: {
-    backgroundColor: theme.colors.primary,
-    borderRadius: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-  },
-  retryButtonText: {
-    color: theme.colors.iconOnPrimary,
-    fontSize: 14,
-    fontWeight: "700",
-  },
-  emptyStateCard: {
-    alignItems: "center",
-    backgroundColor: theme.colors.surface,
-    borderColor: theme.colors.border,
-    borderRadius: 12,
-    borderWidth: 1,
-    paddingHorizontal: 16,
-    paddingVertical: 22,
-  },
-  emptyTitle: {
-    color: theme.colors.text,
-    fontSize: 18,
-    fontWeight: "800",
-  },
-  emptyBody: {
-    color: theme.colors.textSubtle,
-    fontSize: 14,
-    marginTop: 6,
-    textAlign: "center",
-  },
-  modalOverlay: {
-    alignItems: "center",
-    backgroundColor: theme.colors.overlay,
-    flex: 1,
-    justifyContent: "center",
-    padding: 20,
-  },
-  modalCard: {
-    backgroundColor: theme.colors.surface,
-    borderColor: theme.colors.border,
-    borderRadius: 14,
-    borderWidth: 1,
-    padding: 14,
-    width: "100%",
-  },
-  modalHeader: {
-    alignItems: "center",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 6,
-  },
-  modalTitle: {
-    color: theme.colors.text,
-    fontSize: 20,
-    fontWeight: "800",
-  },
-  modalCloseButton: {
-    alignItems: "center",
-    borderColor: theme.colors.borderStrong,
-    borderRadius: 999,
-    borderWidth: 1,
-    height: 30,
-    justifyContent: "center",
-    width: 30,
-  },
-  modalSubtitle: {
-    color: theme.colors.textSubtle,
-    fontSize: 13,
-    marginBottom: 12,
-  },
-  tipDateInputRow: {
-    flexDirection: "row",
-    gap: 8,
-  },
-  tipDateInputGroup: {
-    flex: 1,
-  },
-  tipDateLabel: {
-    color: theme.colors.textMuted,
-    fontSize: 12,
-    fontWeight: "700",
-    marginBottom: 4,
-  },
-  tipDateInput: {
-    alignItems: "center",
-    backgroundColor: theme.colors.inputBackground,
-    borderColor: theme.colors.border,
-    borderRadius: 8,
-    borderWidth: 1,
-    flexDirection: "row",
-    justifyContent: "center",
-    paddingHorizontal: 10,
-    paddingVertical: 9,
-  },
-  tipDateSelector: {
-    justifyContent: "center",
-  },
-  tipDateValue: {
-    color: theme.colors.text,
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  tipDateError: {
-    color: theme.colors.danger,
-    fontSize: 11,
-    marginTop: 4,
-  },
-  tipDatePickerContainer: {
-    backgroundColor: theme.colors.surface,
-    borderColor: theme.colors.border,
-    borderRadius: 12,
-    borderWidth: 1,
-    marginTop: 8,
-    marginBottom: 10,
-    overflow: "hidden",
-  },
-  tipDatePickerHeader: {
-    alignItems: "center",
-    backgroundColor: theme.colors.surfaceMuted,
-    borderBottomColor: theme.colors.border,
-    borderBottomWidth: 1,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-  },
-  tipDatePickerTitle: {
-    color: theme.colors.text,
-    fontSize: 14,
-    fontWeight: "700",
-  },
-  tipDatePickerDoneButton: {
-    backgroundColor: theme.colors.primary,
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-  },
-  tipDatePickerDoneText: {
-    color: theme.colors.iconOnPrimary,
-    fontSize: 12,
-    fontWeight: "700",
-  },
-  tipRunButton: {
-    alignItems: "center",
-    backgroundColor: theme.colors.primary,
-    borderRadius: 8,
-    flexDirection: "row",
-    gap: 6,
-    justifyContent: "center",
-    marginTop: 10,
-    marginBottom: 10,
-    paddingVertical: 9,
-  },
-  tipRunButtonDisabled: {
-    opacity: 0.7,
-  },
-  tipRunButtonText: {
-    color: theme.colors.iconOnPrimary,
-    fontSize: 13,
-    fontWeight: "700",
-  },
-  tipStatusRow: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: 8,
-    marginBottom: 8,
-  },
-  tipStatusText: {
-    color: theme.colors.textMuted,
-    fontSize: 13,
-  },
-  tipQueryErrorText: {
-    color: theme.colors.danger,
-    fontSize: 12,
-    marginBottom: 8,
-  },
-  tipAppliedRangeText: {
-    color: theme.colors.textSubtle,
-    fontSize: 12,
-    marginBottom: 8,
-  },
-  tipStatGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-  },
-  tipStatCard: {
-    backgroundColor: theme.colors.tileSurface,
-    borderColor: theme.colors.border,
-    borderRadius: 10,
-    borderWidth: 1,
-    minWidth: 130,
-    paddingHorizontal: 10,
-    paddingVertical: 9,
-  },
-  tipStatValue: {
-    color: theme.colors.moneyText,
-    fontSize: 17,
-    fontWeight: "800",
-  },
-  tipStatLabel: {
-    color: theme.colors.textSubtle,
-    fontSize: 12,
-    marginTop: 2,
-  },
-});
+const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    screen: {
+      backgroundColor: theme.colors.screen,
+      flex: 1,
+    },
+    headerRow: {
+      alignItems: "center",
+      flexDirection: "row",
+      justifyContent: "space-between",
+      paddingHorizontal: 16,
+      paddingBottom: 12,
+    },
+    pageTitle: {
+      color: theme.colors.text,
+      fontSize: 24,
+      fontWeight: "800",
+    },
+    headerActions: {
+      flexDirection: "row",
+      gap: 8,
+    },
+    refreshButton: {
+      alignItems: "center",
+      backgroundColor: theme.colors.primary,
+      borderRadius: 9,
+      justifyContent: "center",
+      minHeight: 38,
+      minWidth: 38,
+    },
+    tipButton: {
+      alignItems: "center",
+      backgroundColor: theme.colors.success,
+      borderRadius: 9,
+      justifyContent: "center",
+      minHeight: 38,
+      minWidth: 38,
+    },
+    themeToggleButton: {
+      alignItems: "center",
+      backgroundColor: theme.colors.primaryMuted,
+      borderColor: theme.colors.primary,
+      borderRadius: 9,
+      borderWidth: StyleSheet.hairlineWidth,
+      justifyContent: "center",
+      minHeight: 38,
+      minWidth: 38,
+    },
+    searchContainer: {
+      paddingHorizontal: 16,
+      paddingBottom: 10,
+    },
+    searchInput: {
+      backgroundColor: theme.colors.inputBackground,
+      borderColor: theme.colors.border,
+      borderRadius: 9,
+      borderWidth: StyleSheet.hairlineWidth,
+      color: theme.colors.text,
+      fontSize: 14,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+    },
+    filterCard: {
+      backgroundColor: theme.colors.surface,
+      borderColor: theme.colors.border,
+      borderRadius: 10,
+      borderWidth: StyleSheet.hairlineWidth,
+      marginHorizontal: 16,
+      marginBottom: 10,
+      padding: 10,
+    },
+    filterCardHeader: {
+      alignItems: "center",
+      flexDirection: "row",
+      justifyContent: "space-between",
+      marginBottom: 8,
+    },
+    filterCardTitle: {
+      color: theme.colors.textMuted,
+      fontSize: 12,
+      fontWeight: "700",
+      letterSpacing: 0.3,
+      textTransform: "uppercase",
+    },
+    weekFilterContainer: {
+      alignItems: "center",
+      flexDirection: "row",
+      gap: 8,
+    },
+    weekModeButton: {
+      borderRadius: 999,
+      borderWidth: StyleSheet.hairlineWidth,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+    },
+    weekModeButtonEnabled: {
+      backgroundColor: theme.colors.successMuted,
+      borderColor: theme.colors.success,
+    },
+    weekModeButtonDisabled: {
+      backgroundColor: theme.colors.inputBackground,
+      borderColor: theme.colors.borderStrong,
+    },
+    weekModeButtonText: {
+      fontSize: 12,
+      fontWeight: "700",
+    },
+    weekModeButtonTextEnabled: {
+      color: theme.colors.success,
+    },
+    weekModeButtonTextDisabled: {
+      color: theme.colors.textSubtle,
+    },
+    weekButton: {
+      backgroundColor: theme.colors.disabledSurface,
+      borderRadius: 9,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+    },
+    weekButtonDisabled: {
+      opacity: 0.45,
+    },
+    weekButtonText: {
+      color: theme.colors.text,
+      fontSize: 12,
+      fontWeight: "700",
+    },
+    weekLabelContainer: {
+      backgroundColor: theme.colors.inputBackground,
+      borderColor: theme.colors.border,
+      borderRadius: 9,
+      borderWidth: StyleSheet.hairlineWidth,
+      flex: 1,
+      paddingHorizontal: 10,
+      paddingVertical: 8,
+    },
+    weekLabel: {
+      color: theme.colors.textMuted,
+      fontSize: 13,
+      fontWeight: "600",
+      textAlign: "center",
+    },
+    weekResetContainer: {
+      paddingHorizontal: 16,
+      paddingBottom: 10,
+    },
+    weekResetButton: {
+      alignSelf: "flex-start",
+      borderColor: theme.colors.primary,
+      borderRadius: 9,
+      borderWidth: StyleSheet.hairlineWidth,
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+    },
+    weekResetButtonText: {
+      color: theme.colors.primary,
+      fontSize: 12,
+      fontWeight: "700",
+    },
+    listContent: {
+      gap: 10,
+      paddingBottom: floatingTabBarContentBottomPadding,
+      paddingHorizontal: 16,
+    },
+    centeredScreen: {
+      alignItems: "center",
+      flex: 1,
+      justifyContent: "center",
+      paddingHorizontal: 16,
+    },
+    errorText: {
+      color: theme.colors.danger,
+      fontSize: 14,
+      marginBottom: 10,
+      textAlign: "center",
+    },
+    retryButton: {
+      backgroundColor: theme.colors.primary,
+      borderRadius: 9,
+      paddingHorizontal: 14,
+      paddingVertical: 10,
+    },
+    retryButtonText: {
+      color: theme.colors.iconOnPrimary,
+      fontSize: 14,
+      fontWeight: "700",
+    },
+    emptyStateCard: {
+      alignItems: "center",
+      backgroundColor: theme.colors.surface,
+      borderColor: theme.colors.border,
+      borderRadius: 10,
+      borderWidth: StyleSheet.hairlineWidth,
+      paddingHorizontal: 16,
+      paddingVertical: 22,
+    },
+    emptyTitle: {
+      color: theme.colors.text,
+      fontSize: 18,
+      fontWeight: "800",
+    },
+    emptyBody: {
+      color: theme.colors.textSubtle,
+      fontSize: 14,
+      marginTop: 6,
+      textAlign: "center",
+    },
+    modalOverlay: {
+      alignItems: "center",
+      backgroundColor: theme.colors.overlay,
+      flex: 1,
+      justifyContent: "center",
+      padding: 20,
+    },
+    modalCard: {
+      backgroundColor: theme.colors.surface,
+      borderColor: theme.colors.border,
+      borderRadius: 10,
+      borderWidth: StyleSheet.hairlineWidth,
+      padding: 14,
+      width: "100%",
+    },
+    modalHeader: {
+      alignItems: "center",
+      flexDirection: "row",
+      justifyContent: "space-between",
+      marginBottom: 6,
+    },
+    modalTitle: {
+      color: theme.colors.text,
+      fontSize: 20,
+      fontWeight: "800",
+    },
+    modalCloseButton: {
+      alignItems: "center",
+      borderColor: theme.colors.borderStrong,
+      borderRadius: 999,
+      borderWidth: StyleSheet.hairlineWidth,
+      height: 30,
+      justifyContent: "center",
+      width: 30,
+    },
+    modalSubtitle: {
+      color: theme.colors.textSubtle,
+      fontSize: 13,
+      marginBottom: 12,
+    },
+    tipDateInputRow: {
+      flexDirection: "row",
+      gap: 8,
+    },
+    tipDateInputGroup: {
+      flex: 1,
+    },
+    tipDateLabel: {
+      color: theme.colors.textMuted,
+      fontSize: 12,
+      fontWeight: "700",
+      marginBottom: 4,
+    },
+    tipDateInput: {
+      alignItems: "center",
+      backgroundColor: theme.colors.inputBackground,
+      borderColor: theme.colors.border,
+      borderRadius: 9,
+      borderWidth: StyleSheet.hairlineWidth,
+      flexDirection: "row",
+      justifyContent: "center",
+      paddingHorizontal: 10,
+      paddingVertical: 9,
+    },
+    tipDateSelector: {
+      justifyContent: "center",
+    },
+    tipDateValue: {
+      color: theme.colors.text,
+      fontSize: 14,
+      fontWeight: "600",
+    },
+    tipDateError: {
+      color: theme.colors.danger,
+      fontSize: 11,
+      marginTop: 4,
+    },
+    tipDatePickerContainer: {
+      backgroundColor: theme.colors.modalSurface,
+      borderColor: theme.colors.border,
+      borderRadius: 10,
+      borderWidth: StyleSheet.hairlineWidth,
+      marginTop: 8,
+      marginBottom: 10,
+      overflow: "hidden",
+    },
+    tipDatePickerHeader: {
+      alignItems: "center",
+      backgroundColor: theme.colors.surfaceMuted,
+      borderBottomColor: theme.colors.border,
+      borderBottomWidth: 1,
+      flexDirection: "row",
+      justifyContent: "space-between",
+      paddingHorizontal: 10,
+      paddingVertical: 8,
+    },
+    tipDatePickerTitle: {
+      color: theme.colors.text,
+      fontSize: 14,
+      fontWeight: "700",
+    },
+    tipDatePickerDoneButton: {
+      backgroundColor: theme.colors.primary,
+      borderRadius: 9,
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+    },
+    tipDatePickerDoneText: {
+      color: theme.colors.iconOnPrimary,
+      fontSize: 12,
+      fontWeight: "700",
+    },
+    tipRunButton: {
+      alignItems: "center",
+      backgroundColor: theme.colors.primary,
+      borderRadius: 9,
+      flexDirection: "row",
+      gap: 6,
+      justifyContent: "center",
+      marginTop: 10,
+      marginBottom: 10,
+      paddingVertical: 9,
+    },
+    tipRunButtonDisabled: {
+      opacity: 0.7,
+    },
+    tipRunButtonText: {
+      color: theme.colors.iconOnPrimary,
+      fontSize: 13,
+      fontWeight: "700",
+    },
+    tipStatusRow: {
+      alignItems: "center",
+      flexDirection: "row",
+      gap: 8,
+      marginBottom: 8,
+    },
+    tipStatusText: {
+      color: theme.colors.textMuted,
+      fontSize: 13,
+    },
+    tipQueryErrorText: {
+      color: theme.colors.danger,
+      fontSize: 12,
+      marginBottom: 8,
+    },
+    tipAppliedRangeText: {
+      color: theme.colors.textSubtle,
+      fontSize: 12,
+      marginBottom: 8,
+    },
+    tipStatGrid: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 8,
+    },
+    tipStatCard: {
+      backgroundColor: theme.colors.tileSurface,
+      borderColor: theme.colors.border,
+      borderRadius: 8,
+      borderWidth: StyleSheet.hairlineWidth,
+      minWidth: 130,
+      paddingHorizontal: 10,
+      paddingVertical: 9,
+    },
+    tipStatValue: {
+      color: theme.colors.moneyText,
+      fontSize: 17,
+      fontWeight: "800",
+    },
+    tipStatLabel: {
+      color: theme.colors.textSubtle,
+      fontSize: 12,
+      marginTop: 2,
+    },
+  });

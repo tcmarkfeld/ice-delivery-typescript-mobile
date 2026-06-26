@@ -1,6 +1,6 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from "react";
 
-import { ApiResult } from '@/api/http-client';
+import { ApiResult } from "@/api/http-client";
 
 export interface UseApiResult<TData> {
   data: TData | null;
@@ -10,7 +10,7 @@ export interface UseApiResult<TData> {
 }
 
 export const useApi = <TData>(
-  requestFn: (...args: unknown[]) => Promise<ApiResult<TData>>
+  requestFn: (...args: unknown[]) => Promise<ApiResult<TData>>,
 ): UseApiResult<TData> => {
   const [data, setData] = useState<TData | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -33,7 +33,7 @@ export const useApi = <TData>(
       setData(response.data);
       return response;
     },
-    [requestFn]
+    [requestFn],
   );
 
   return useMemo(
@@ -43,6 +43,6 @@ export const useApi = <TData>(
       isLoading,
       request,
     }),
-    [data, error, isLoading, request]
+    [data, error, isLoading, request],
   );
 };

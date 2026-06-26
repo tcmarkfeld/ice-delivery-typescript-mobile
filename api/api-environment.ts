@@ -1,13 +1,13 @@
 export enum ApiEnvironment {
-  Development = 'development',
-  Staging = 'staging',
-  Production = 'production',
+  Development = "development",
+  Staging = "staging",
+  Production = "production",
 }
 
 const apiBaseUrlByEnvironment: Record<ApiEnvironment, string> = {
-  [ApiEnvironment.Development]: 'https://ice-delivery.fly.dev',
-  [ApiEnvironment.Staging]: 'https://ice-delivery.fly.dev',
-  [ApiEnvironment.Production]: 'https://ice-delivery.fly.dev',
+  [ApiEnvironment.Development]: "https://ice-delivery.fly.dev",
+  [ApiEnvironment.Staging]: "https://ice-delivery.fly.dev",
+  [ApiEnvironment.Production]: "https://ice-delivery.fly.dev",
 };
 
 export const resolveApiEnvironment = (): ApiEnvironment => {

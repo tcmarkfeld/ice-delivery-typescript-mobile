@@ -1,14 +1,16 @@
 {
   "name": "ice-delivery-typescript-mobile",
   "main": "expo-router/entry",
-  "version": "1.1.5",
+  "version": "1.1.6",
   "scripts": {
     "start": "expo start",
     "reset-project": "node ./scripts/reset-project.js",
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
@@ -19,6 +21,7 @@
     "@react-navigation/native": "^7.1.8",
     "@tanstack/react-query": "^5.90.20",
     "expo": "~54.0.33",
+    "expo-blur": "~15.0.8",
     "expo-constants": "~18.0.13",
     "expo-font": "~14.0.11",
     "expo-haptics": "~15.0.8",
@@ -47,8 +50,8 @@
     "@types/react": "~19.1.0",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~10.0.0",
+    "prettier": "^3.6.2",
     "typescript": "~5.9.2"
   },
-  "private": true,
-  "packageManager": "yarn@4.14.1+sha512.64df448055b2d37ba269d7db535a469b8da93f8ef1140c25fd7a83c00a8fbaacb214ca0e02553b92a2c54cef78bb67d0b4817fab02001df0e24fac0faccc3b42"
+  "private": true
 }

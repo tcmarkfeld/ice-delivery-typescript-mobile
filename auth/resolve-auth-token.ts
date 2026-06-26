@@ -1,13 +1,13 @@
-import { LoginResponse } from '@/api/types';
+import { LoginResponse } from "@/api/types";
 
 const getTokenFromStringResponse = (value: string): string | null => {
-  const trimmedValue = value.trim().replace(/^"(.+)"$/, '$1');
+  const trimmedValue = value.trim().replace(/^"(.+)"$/, "$1");
 
   if (!trimmedValue) {
     return null;
   }
 
-  const bearerPrefix = 'bearer ';
+  const bearerPrefix = "bearer ";
 
   if (trimmedValue.toLowerCase().startsWith(bearerPrefix)) {
     const bearerToken = trimmedValue.slice(bearerPrefix.length).trim();
@@ -21,8 +21,10 @@ const getTokenFromStringResponse = (value: string): string | null => {
   return trimmedValue;
 };
 
-export const resolveAuthToken = (loginResponse: LoginResponse): string | null => {
-  if (typeof loginResponse === 'string') {
+export const resolveAuthToken = (
+  loginResponse: LoginResponse,
+): string | null => {
+  if (typeof loginResponse === "string") {
     return getTokenFromStringResponse(loginResponse);
   }
 
@@ -42,21 +44,23 @@ export const resolveAuthToken = (loginResponse: LoginResponse): string | null =>
     return loginResponse.data.token;
   }
 
-  if (typeof loginResponse.data?.message === 'string') {
-    const tokenFromDataMessage = getTokenFromStringResponse(loginResponse.data.message);
+  if (typeof loginResponse.data?.message === "string") {
+    const tokenFromDataMessage = getTokenFromStringResponse(
+      loginResponse.data.message,
+    );
     if (tokenFromDataMessage) {
       return tokenFromDataMessage;
     }
   }
 
-  if (typeof loginResponse.message === 'string') {
+  if (typeof loginResponse.message === "string") {
     const tokenFromMessage = getTokenFromStringResponse(loginResponse.message);
     if (tokenFromMessage) {
       return tokenFromMessage;
     }
   }
 
-  if (typeof loginResponse.error === 'string') {
+  if (typeof loginResponse.error === "string") {
     const tokenFromError = getTokenFromStringResponse(loginResponse.error);
     if (tokenFromError) {
       return tokenFromError;
@@ -66,8 +70,10 @@ export const resolveAuthToken = (loginResponse: LoginResponse): string | null =>
   return null;
 };
 
-export const resolveLoginFailureMessage = (loginResponse: LoginResponse): string | null => {
-  if (typeof loginResponse === 'string') {
+export const resolveLoginFailureMessage = (
+  loginResponse: LoginResponse,
+): string | null => {
+  if (typeof loginResponse === "string") {
     const trimmedValue = loginResponse.trim();
 
     if (!trimmedValue) {
@@ -81,15 +87,21 @@ export const resolveLoginFailureMessage = (loginResponse: LoginResponse): string
     return trimmedValue;
   }
 
-  if (typeof loginResponse.message === 'string' && loginResponse.message.trim()) {
+  if (
+    typeof loginResponse.message === "string" &&
+    loginResponse.message.trim()
+  ) {
     return loginResponse.message.trim();
   }
 
-  if (typeof loginResponse.error === 'string' && loginResponse.error.trim()) {
+  if (typeof loginResponse.error === "string" && loginResponse.error.trim()) {
     return loginResponse.error.trim();
   }
 
-  if (typeof loginResponse.data?.message === 'string' && loginResponse.data.message.trim()) {
+  if (
+    typeof loginResponse.data?.message === "string" &&
+    loginResponse.data.message.trim()
+  ) {
     return loginResponse.data.message.trim();
   }
 

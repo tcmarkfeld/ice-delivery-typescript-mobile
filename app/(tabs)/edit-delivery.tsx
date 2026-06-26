@@ -1,12 +1,13 @@
-import { zodResolver } from '@hookform/resolvers/zod';
+import { zodResolver } from "@hookform/resolvers/zod";
 import DateTimePicker, {
   DateTimePickerAndroid,
   DateTimePickerEvent,
-} from '@react-native-community/datetimepicker';
-import { useQueryClient } from '@tanstack/react-query';
-import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+} from "@react-native-community/datetimepicker";
+import { useQueryClient } from "@tanstack/react-query";
+import { BlurView } from "expo-blur";
+import { router, useLocalSearchParams } from "expo-router";
+import { useEffect, useMemo, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -18,48 +19,54 @@ import {
   Text,
   TextInput,
   View,
-} from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { z } from 'zod';
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { z } from "zod";
 
-import { useAllDeliveriesQuery } from '@/api/queries/use-deliveries-query';
-import { useUpdateDeliveryMutation } from '@/api/queries/use-update-delivery-mutation';
-import { ApiQueryKey } from '@/api/query-keys';
-import { CreateDeliveryInput, Delivery } from '@/api/types';
-import { AppTheme } from '@/constants/theme';
-import { parseIsoDateKey, sanitizeDateKey, toIsoDateKey } from '@/features/date/date-key-utils';
-import { neighborhoodData } from '@/features/neighborhood/constants';
+import { useAllDeliveriesQuery } from "@/api/queries/use-deliveries-query";
+import { useUpdateDeliveryMutation } from "@/api/queries/use-update-delivery-mutation";
+import { ApiQueryKey } from "@/api/query-keys";
+import { CreateDeliveryInput, Delivery } from "@/api/types";
+import { floatingTabBarContentBottomPadding } from "@/constants/navigation";
+import { AppTheme } from "@/constants/theme";
+import {
+  parseIsoDateKey,
+  sanitizeDateKey,
+  toIsoDateKey,
+} from "@/features/date/date-key-utils";
+import { neighborhoodData } from "@/features/neighborhood/constants";
 import {
   detectNeighborhoodFromAddress,
   NeighborhoodOption,
-} from '@/features/neighborhood/detect-neighborhood';
-import { toCount } from '@/features/deliveries/delivery-utils';
-import { useAppTheme } from '@/hooks/use-app-theme';
-import { useSession } from '@/hooks/use-session';
+} from "@/features/neighborhood/detect-neighborhood";
+import { toCount } from "@/features/deliveries/delivery-utils";
+import { useAppTheme } from "@/hooks/use-app-theme";
+import { useSession } from "@/hooks/use-session";
+import { useFloatingTabBar } from "@/providers/floating-tab-bar-provider";
 
 enum IceTypeOption {
-  Loose = 'Loose Ice',
-  Bagged = 'Bagged Ice',
+  Loose = "Loose Ice",
+  Bagged = "Bagged Ice",
 }
 
 enum CoolerSizeOption {
-  Quart40 = '40 Quart',
-  Quart62 = '62 Quart',
-  Quart200 = 'Big Ass 200 Qt',
+  Quart40 = "40 Quart",
+  Quart62 = "62 Quart",
+  Quart200 = "Big Ass 200 Qt",
 }
 
 enum DayOrNightOption {
-  AM = 'AM',
-  PM = 'PM',
+  AM = "AM",
+  PM = "PM",
 }
 
 enum DateField {
-  StartDate = 'startDate',
-  EndDate = 'endDate',
+  StartDate = "startDate",
+  EndDate = "endDate",
 }
 
 const formatPhoneNumber = (rawValue: string): string => {
-  const digitsOnly = rawValue.replace(/\D/g, '').slice(0, 10);
+  const digitsOnly = rawValue.replace(/\D/g, "").slice(0, 10);
 
   if (digitsOnly.length <= 3) {
     return digitsOnly;
@@ -78,22 +85,25 @@ const formatPhoneNumber = (rawValue: string): string => {
 };
 
 const editDeliverySchema = z.object({
-  customerName: z.string().trim().min(1, 'Customer name is required.'),
-  phoneNumber: z.string().trim().min(1, 'Phone is required.'),
-  deliveryAddress: z.string().trim().min(1, 'Delivery address is required.'),
+  customerName: z.string().trim().min(1, "Customer name is required."),
+  phoneNumber: z.string().trim().min(1, "Phone is required."),
+  deliveryAddress: z.string().trim().min(1, "Delivery address is required."),
   email: z
     .string()
     .trim()
-    .refine((value) => value.length === 0 || z.email().safeParse(value).success, {
-      message: 'Enter a valid email.',
-    }),
+    .refine(
+      (value) => value.length === 0 || z.email().safeParse(value).success,
+      {
+        message: "Enter a valid email.",
+      },
+    ),
   specialInstructions: z.string().trim(),
-  startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid start date.'),
-  endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid end date.'),
+  startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid start date."),
+  endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid end date."),
   coolerSize: z.enum(CoolerSizeOption),
   iceType: z.enum(IceTypeOption),
-  neighborhood: z.number().int().min(1, 'Neighborhood is required.'),
-  coolerCount: z.coerce.number().int().min(1, 'Coolers must be at least 1.'),
+  neighborhood: z.number().int().min(1, "Neighborhood is required."),
+  coolerCount: z.coerce.number().int().min(1, "Coolers must be at least 1."),
   bagLimes: z.coerce.number().int().min(0),
   bagLemons: z.coerce.number().int().min(0),
   bagOranges: z.coerce.number().int().min(0),
@@ -106,9 +116,10 @@ const editDeliverySchema = z.object({
 
 type EditDeliveryFormInput = z.input<typeof editDeliverySchema>;
 type EditDeliveryFormOutput = z.output<typeof editDeliverySchema>;
-const allDeliveriesRoute = '/(tabs)/all-deliveries';
+const allDeliveriesRoute = "/(tabs)/all-deliveries";
 
-const normalizeOptionValue = (value: string): string => value.trim().toLowerCase();
+const normalizeOptionValue = (value: string): string =>
+  value.trim().toLowerCase();
 
 const getCoolerSizeOption = (value: string): CoolerSizeOption => {
   const normalizedValue = normalizeOptionValue(value);
@@ -134,15 +145,19 @@ const getIceTypeOption = (value: string): IceTypeOption => {
   return IceTypeOption.Loose;
 };
 
-const getDefaultValuesFromDelivery = (delivery: Delivery): EditDeliveryFormInput => {
-  const dayOrNightValue = String(delivery.dayornight ?? '').trim() as DayOrNightOption;
+const getDefaultValuesFromDelivery = (
+  delivery: Delivery,
+): EditDeliveryFormInput => {
+  const dayOrNightValue = String(
+    delivery.dayornight ?? "",
+  ).trim() as DayOrNightOption;
 
   return {
-    customerName: delivery.customer_name ?? '',
-    phoneNumber: delivery.customer_phone ?? '',
-    deliveryAddress: delivery.delivery_address ?? '',
-    email: delivery.customer_email ?? '',
-    specialInstructions: delivery.special_instructions ?? '',
+    customerName: delivery.customer_name ?? "",
+    phoneNumber: delivery.customer_phone ?? "",
+    deliveryAddress: delivery.delivery_address ?? "",
+    email: delivery.customer_email ?? "",
+    specialInstructions: delivery.special_instructions ?? "",
     startDate: sanitizeDateKey(delivery.start_date),
     endDate: sanitizeDateKey(delivery.end_date),
     coolerSize: getCoolerSizeOption(String(delivery.cooler_size)),
@@ -155,36 +170,46 @@ const getDefaultValuesFromDelivery = (delivery: Delivery): EditDeliveryFormInput
     margSalt: toCount(delivery.marg_salt),
     freezePops: toCount(delivery.freeze_pops),
     tip: toCount(delivery.tip),
-    deliveryTime: String(delivery.deliverytime ?? ''),
+    deliveryTime: String(delivery.deliverytime ?? ""),
     dayOrNight:
-      dayOrNightValue === DayOrNightOption.AM || dayOrNightValue === DayOrNightOption.PM
+      dayOrNightValue === DayOrNightOption.AM ||
+      dayOrNightValue === DayOrNightOption.PM
         ? dayOrNightValue
         : undefined,
   };
 };
 
-const renderFieldError = (message: string | undefined, styles: ReturnType<typeof createStyles>) =>
-  message ? <Text style={styles.errorText}>{message}</Text> : null;
+const renderFieldError = (
+  message: string | undefined,
+  styles: ReturnType<typeof createStyles>,
+) => (message ? <Text style={styles.errorText}>{message}</Text> : null);
 
 export default function EditDeliveryScreen() {
   const theme = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const insets = useSafeAreaInsets();
+  const { handleScroll } = useFloatingTabBar();
   const queryClient = useQueryClient();
   const { authToken } = useSession();
   const { id } = useLocalSearchParams<{ id?: string }>();
 
   const deliveriesQuery = useAllDeliveriesQuery(authToken);
   const updateDeliveryMutation = useUpdateDeliveryMutation();
-  const [activeDateField, setActiveDateField] = useState<DateField | null>(null);
-  const [isNeighborhoodMenuOpen, setIsNeighborhoodMenuOpen] = useState<boolean>(false);
+  const [activeDateField, setActiveDateField] = useState<DateField | null>(
+    null,
+  );
+  const [isNeighborhoodMenuOpen, setIsNeighborhoodMenuOpen] =
+    useState<boolean>(false);
 
   const selectedDelivery = useMemo(() => {
     if (!id || !deliveriesQuery.data) {
       return null;
     }
 
-    return deliveriesQuery.data.find((item) => String(item.id) === String(id)) ?? null;
+    return (
+      deliveriesQuery.data.find((item) => String(item.id) === String(id)) ??
+      null
+    );
   }, [deliveriesQuery.data, id]);
 
   const {
@@ -196,18 +221,26 @@ export default function EditDeliveryScreen() {
     watch,
   } = useForm<EditDeliveryFormInput, undefined, EditDeliveryFormOutput>({
     resolver: zodResolver(editDeliverySchema),
-    defaultValues: selectedDelivery ? getDefaultValuesFromDelivery(selectedDelivery) : undefined,
+    defaultValues: selectedDelivery
+      ? getDefaultValuesFromDelivery(selectedDelivery)
+      : undefined,
   });
 
-  const startDateValue = watch('startDate');
-  const endDateValue = watch('endDate');
-  const deliveryAddressValue = watch('deliveryAddress');
-  const neighborhoodValue = watch('neighborhood');
-  const selectedNeighborhoodOption = useMemo<NeighborhoodOption | undefined>(() => {
-    return neighborhoodData.find((option) => option.value === neighborhoodValue);
+  const startDateValue = watch("startDate");
+  const endDateValue = watch("endDate");
+  const deliveryAddressValue = watch("deliveryAddress");
+  const neighborhoodValue = watch("neighborhood");
+  const selectedNeighborhoodOption = useMemo<
+    NeighborhoodOption | undefined
+  >(() => {
+    return neighborhoodData.find(
+      (option) => option.value === neighborhoodValue,
+    );
   }, [neighborhoodValue]);
   const selectedDateValue =
-    activeDateField === DateField.EndDate ? parseIsoDateKey(endDateValue) : parseIsoDateKey(startDateValue);
+    activeDateField === DateField.EndDate
+      ? parseIsoDateKey(endDateValue)
+      : parseIsoDateKey(startDateValue);
 
   useEffect(() => {
     if (!selectedDelivery) {
@@ -218,10 +251,16 @@ export default function EditDeliveryScreen() {
   }, [reset, selectedDelivery]);
 
   useEffect(() => {
-    const detectedNeighborhood = detectNeighborhoodFromAddress(deliveryAddressValue);
+    const detectedNeighborhood =
+      detectNeighborhoodFromAddress(deliveryAddressValue);
 
-    if (detectedNeighborhood && neighborhoodValue !== detectedNeighborhood.value) {
-      setValue('neighborhood', detectedNeighborhood.value, { shouldValidate: true });
+    if (
+      detectedNeighborhood &&
+      neighborhoodValue !== detectedNeighborhood.value
+    ) {
+      setValue("neighborhood", detectedNeighborhood.value, {
+        shouldValidate: true,
+      });
     }
   }, [deliveryAddressValue, neighborhoodValue, setValue]);
 
@@ -237,7 +276,10 @@ export default function EditDeliveryScreen() {
     return (
       <View style={[styles.screen, styles.centeredScreen]}>
         <Text style={styles.errorText}>Delivery not found.</Text>
-        <Pressable onPress={() => router.push(allDeliveriesRoute)} style={styles.actionButton}>
+        <Pressable
+          onPress={() => router.push(allDeliveriesRoute)}
+          style={styles.actionButton}
+        >
           <Text style={styles.actionButtonText}>Back</Text>
         </Pressable>
       </View>
@@ -253,24 +295,26 @@ export default function EditDeliveryScreen() {
     const isoDate = toIsoDateKey(selectedDate);
 
     if (activeDateField === DateField.StartDate) {
-      setValue('startDate', isoDate, { shouldValidate: true });
+      setValue("startDate", isoDate, { shouldValidate: true });
     }
 
     if (activeDateField === DateField.EndDate) {
-      setValue('endDate', isoDate, { shouldValidate: true });
+      setValue("endDate", isoDate, { shouldValidate: true });
     }
 
-    if (Platform.OS === 'android') {
+    if (Platform.OS === "android") {
       setActiveDateField(null);
     }
   };
 
   const openDatePicker = (field: DateField) => {
-    if (Platform.OS === 'android') {
+    if (Platform.OS === "android") {
       setActiveDateField(field);
       DateTimePickerAndroid.open({
-        mode: 'date',
-        value: parseIsoDateKey(field === DateField.StartDate ? startDateValue : endDateValue),
+        mode: "date",
+        value: parseIsoDateKey(
+          field === DateField.StartDate ? startDateValue : endDateValue,
+        ),
         onChange: (event, date) => onDateChange(event, date),
       });
       return;
@@ -313,9 +357,13 @@ export default function EditDeliveryScreen() {
     });
 
     await Promise.all([
-      queryClient.invalidateQueries({ queryKey: [ApiQueryKey.DeliveriesToday] }),
+      queryClient.invalidateQueries({
+        queryKey: [ApiQueryKey.DeliveriesToday],
+      }),
       queryClient.invalidateQueries({ queryKey: [ApiQueryKey.DeliveriesAll] }),
-      queryClient.invalidateQueries({ queryKey: [ApiQueryKey.DeliveriesByDateRange] }),
+      queryClient.invalidateQueries({
+        queryKey: [ApiQueryKey.DeliveriesByDateRange],
+      }),
     ]);
 
     reset(values);
@@ -324,23 +372,49 @@ export default function EditDeliveryScreen() {
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      style={[styles.screen, { paddingTop: insets.top + 8 }]}>
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <View style={styles.headerRow}>
-          <Pressable onPress={() => router.push(allDeliveriesRoute)} style={styles.backButton}>
-            <Text style={styles.backButtonText}>Back</Text>
-          </Pressable>
-          <Text style={styles.pageTitle}>Edit Delivery</Text>
-        </View>
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      style={styles.screen}
+    >
+      <View style={[styles.headerRow, { paddingTop: insets.top + 8 }]}>
+        <BlurView
+          intensity={theme.colors.liquidGlass.blurIntensity}
+          style={styles.headerBlurLayer}
+          tint={
+            theme.scheme === "dark"
+              ? "systemChromeMaterialDark"
+              : "systemUltraThinMaterialLight"
+          }
+        />
+        <Pressable
+          onPress={() => router.push(allDeliveriesRoute)}
+          style={styles.backButton}
+        >
+          <Text style={styles.backButtonText}>Back</Text>
+        </Pressable>
+        <Text style={styles.pageTitle}>Edit Delivery</Text>
+      </View>
 
+      <ScrollView
+        contentContainerStyle={[
+          styles.content,
+          { paddingTop: insets.top + 64 },
+        ]}
+        keyboardShouldPersistTaps="handled"
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.sectionCard}>
           <Text style={styles.fieldLabel}>Customer Name</Text>
           <Controller
             control={control}
             name="customerName"
             render={({ field: { onChange, value } }) => (
-              <TextInput onChangeText={onChange} style={styles.input} value={value} />
+              <TextInput
+                onChangeText={onChange}
+                style={styles.input}
+                value={value}
+              />
             )}
           />
           {renderFieldError(errors.customerName?.message, styles)}
@@ -352,7 +426,9 @@ export default function EditDeliveryScreen() {
             render={({ field: { onChange, value } }) => (
               <TextInput
                 keyboardType="phone-pad"
-                onChangeText={(nextValue) => onChange(formatPhoneNumber(nextValue))}
+                onChangeText={(nextValue) =>
+                  onChange(formatPhoneNumber(nextValue))
+                }
                 style={styles.input}
                 value={value}
               />
@@ -365,19 +441,29 @@ export default function EditDeliveryScreen() {
             control={control}
             name="deliveryAddress"
             render={({ field: { onChange, value } }) => (
-              <TextInput onChangeText={onChange} style={styles.input} value={value} />
+              <TextInput
+                onChangeText={onChange}
+                style={styles.input}
+                value={value}
+              />
             )}
           />
           {renderFieldError(errors.deliveryAddress?.message, styles)}
 
           <Text style={styles.fieldLabel}>Start Date</Text>
-          <Pressable onPress={() => openDatePicker(DateField.StartDate)} style={[styles.input, styles.dateSelector]}>
+          <Pressable
+            onPress={() => openDatePicker(DateField.StartDate)}
+            style={[styles.input, styles.dateSelector]}
+          >
             <Text style={styles.dateSelectorText}>{startDateValue}</Text>
           </Pressable>
           {renderFieldError(errors.startDate?.message, styles)}
 
           <Text style={styles.fieldLabel}>End Date</Text>
-          <Pressable onPress={() => openDatePicker(DateField.EndDate)} style={[styles.input, styles.dateSelector]}>
+          <Pressable
+            onPress={() => openDatePicker(DateField.EndDate)}
+            style={[styles.input, styles.dateSelector]}
+          >
             <Text style={styles.dateSelectorText}>{endDateValue}</Text>
           </Pressable>
           {renderFieldError(errors.endDate?.message, styles)}
@@ -392,12 +478,19 @@ export default function EditDeliveryScreen() {
                   <Pressable
                     key={option}
                     onPress={() => onChange(option)}
-                    style={[styles.choiceButton, value === option ? styles.choiceButtonActive : undefined]}>
+                    style={[
+                      styles.choiceButton,
+                      value === option ? styles.choiceButtonActive : undefined,
+                    ]}
+                  >
                     <Text
                       style={[
                         styles.choiceButtonText,
-                        value === option ? styles.choiceButtonTextActive : undefined,
-                      ]}>
+                        value === option
+                          ? styles.choiceButtonTextActive
+                          : undefined,
+                      ]}
+                    >
                       {option}
                     </Text>
                   </Pressable>
@@ -416,12 +509,19 @@ export default function EditDeliveryScreen() {
                   <Pressable
                     key={option}
                     onPress={() => onChange(option)}
-                    style={[styles.choiceButton, value === option ? styles.choiceButtonActive : undefined]}>
+                    style={[
+                      styles.choiceButton,
+                      value === option ? styles.choiceButtonActive : undefined,
+                    ]}
+                  >
                     <Text
                       style={[
                         styles.choiceButtonText,
-                        value === option ? styles.choiceButtonTextActive : undefined,
-                      ]}>
+                        value === option
+                          ? styles.choiceButtonTextActive
+                          : undefined,
+                      ]}
+                    >
                       {option}
                     </Text>
                   </Pressable>
@@ -437,16 +537,23 @@ export default function EditDeliveryScreen() {
             render={({ field: { onChange } }) => (
               <View style={styles.dropdownContainer}>
                 <Pressable
-                  onPress={() => setIsNeighborhoodMenuOpen((currentValue) => !currentValue)}
-                  style={[styles.input, styles.dropdownButton]}>
+                  onPress={() =>
+                    setIsNeighborhoodMenuOpen((currentValue) => !currentValue)
+                  }
+                  style={[styles.input, styles.dropdownButton]}
+                >
                   <Text style={styles.dropdownButtonText}>
-                    {selectedNeighborhoodOption?.label ?? 'Select neighborhood...'}
+                    {selectedNeighborhoodOption?.label ??
+                      "Select neighborhood..."}
                   </Text>
                 </Pressable>
 
                 {isNeighborhoodMenuOpen ? (
                   <View style={styles.dropdownMenu}>
-                    <ScrollView nestedScrollEnabled style={styles.dropdownScroll}>
+                    <ScrollView
+                      nestedScrollEnabled
+                      style={styles.dropdownScroll}
+                    >
                       {neighborhoodData.map((option) => (
                         <Pressable
                           key={`${option.value}`}
@@ -454,8 +561,11 @@ export default function EditDeliveryScreen() {
                             onChange(option.value);
                             setIsNeighborhoodMenuOpen(false);
                           }}
-                          style={styles.dropdownItem}>
-                          <Text style={styles.dropdownItemText}>{option.label}</Text>
+                          style={styles.dropdownItem}
+                        >
+                          <Text style={styles.dropdownItemText}>
+                            {option.label}
+                          </Text>
                         </Pressable>
                       ))}
                     </ScrollView>
@@ -475,7 +585,9 @@ export default function EditDeliveryScreen() {
                 render={({ field: { onChange, value } }) => (
                   <TextInput
                     keyboardType="number-pad"
-                    onChangeText={(nextValue) => onChange(Number.parseInt(nextValue || '0', 10) || 0)}
+                    onChangeText={(nextValue) =>
+                      onChange(Number.parseInt(nextValue || "0", 10) || 0)
+                    }
                     style={styles.input}
                     value={String(value)}
                   />
@@ -490,7 +602,9 @@ export default function EditDeliveryScreen() {
                 render={({ field: { onChange, value } }) => (
                   <TextInput
                     keyboardType="number-pad"
-                    onChangeText={(nextValue) => onChange(Number.parseInt(nextValue || '0', 10) || 0)}
+                    onChangeText={(nextValue) =>
+                      onChange(Number.parseInt(nextValue || "0", 10) || 0)
+                    }
                     style={styles.input}
                     value={String(value)}
                   />
@@ -508,7 +622,9 @@ export default function EditDeliveryScreen() {
                 render={({ field: { onChange, value } }) => (
                   <TextInput
                     keyboardType="number-pad"
-                    onChangeText={(nextValue) => onChange(Number.parseInt(nextValue || '0', 10) || 0)}
+                    onChangeText={(nextValue) =>
+                      onChange(Number.parseInt(nextValue || "0", 10) || 0)
+                    }
                     style={styles.input}
                     value={String(value)}
                   />
@@ -523,7 +639,9 @@ export default function EditDeliveryScreen() {
                 render={({ field: { onChange, value } }) => (
                   <TextInput
                     keyboardType="number-pad"
-                    onChangeText={(nextValue) => onChange(Number.parseInt(nextValue || '0', 10) || 0)}
+                    onChangeText={(nextValue) =>
+                      onChange(Number.parseInt(nextValue || "0", 10) || 0)
+                    }
                     style={styles.input}
                     value={String(value)}
                   />
@@ -541,7 +659,9 @@ export default function EditDeliveryScreen() {
                 render={({ field: { onChange, value } }) => (
                   <TextInput
                     keyboardType="number-pad"
-                    onChangeText={(nextValue) => onChange(Number.parseInt(nextValue || '0', 10) || 0)}
+                    onChangeText={(nextValue) =>
+                      onChange(Number.parseInt(nextValue || "0", 10) || 0)
+                    }
                     style={styles.input}
                     value={String(value)}
                   />
@@ -556,7 +676,9 @@ export default function EditDeliveryScreen() {
                 render={({ field: { onChange, value } }) => (
                   <TextInput
                     keyboardType="number-pad"
-                    onChangeText={(nextValue) => onChange(Number.parseInt(nextValue || '0', 10) || 0)}
+                    onChangeText={(nextValue) =>
+                      onChange(Number.parseInt(nextValue || "0", 10) || 0)
+                    }
                     style={styles.input}
                     value={String(value)}
                   />
@@ -574,7 +696,9 @@ export default function EditDeliveryScreen() {
                 render={({ field: { onChange, value } }) => (
                   <TextInput
                     keyboardType="number-pad"
-                    onChangeText={(nextValue) => onChange(Number.parseInt(nextValue || '0', 10) || 0)}
+                    onChangeText={(nextValue) =>
+                      onChange(Number.parseInt(nextValue || "0", 10) || 0)
+                    }
                     style={styles.input}
                     value={String(value)}
                   />
@@ -587,7 +711,11 @@ export default function EditDeliveryScreen() {
                 control={control}
                 name="deliveryTime"
                 render={({ field: { onChange, value } }) => (
-                  <TextInput onChangeText={onChange} style={styles.input} value={value} />
+                  <TextInput
+                    onChangeText={onChange}
+                    style={styles.input}
+                    value={value}
+                  />
                 )}
               />
             </View>
@@ -598,19 +726,27 @@ export default function EditDeliveryScreen() {
             control={control}
             name="specialInstructions"
             render={({ field: { onChange, value } }) => (
-              <TextInput multiline onChangeText={onChange} style={[styles.input, styles.textArea]} value={value} />
+              <TextInput
+                multiline
+                onChangeText={onChange}
+                style={[styles.input, styles.textArea]}
+                value={value}
+              />
             )}
           />
         </View>
 
         {updateDeliveryMutation.error ? (
-          <Text style={styles.errorText}>{updateDeliveryMutation.error.message}</Text>
+          <Text style={styles.errorText}>
+            {updateDeliveryMutation.error.message}
+          </Text>
         ) : null}
 
         <Pressable
           disabled={updateDeliveryMutation.isPending}
           onPress={handleSubmit(onSubmit)}
-          style={styles.submitButton}>
+          style={styles.submitButton}
+        >
           {updateDeliveryMutation.isPending ? (
             <ActivityIndicator color={theme.colors.iconOnPrimary} />
           ) : (
@@ -619,13 +755,21 @@ export default function EditDeliveryScreen() {
         </Pressable>
       </ScrollView>
 
-      {Platform.OS === 'ios' ? (
-        <Modal animationType="slide" presentationStyle="overFullScreen" transparent visible={activeDateField !== null}>
+      {Platform.OS === "ios" ? (
+        <Modal
+          animationType="slide"
+          presentationStyle="overFullScreen"
+          transparent
+          visible={activeDateField !== null}
+        >
           <View style={styles.dateModalOverlay}>
             <View style={styles.dateModalCard}>
               <View style={styles.dateModalHeader}>
                 <Text style={styles.dateModalTitle}>Select Date</Text>
-                <Pressable onPress={() => setActiveDateField(null)} style={styles.dateModalDoneButton}>
+                <Pressable
+                  onPress={() => setActiveDateField(null)}
+                  style={styles.dateModalDoneButton}
+                >
                   <Text style={styles.dateModalDoneText}>Done</Text>
                 </Pressable>
               </View>
@@ -644,209 +788,226 @@ export default function EditDeliveryScreen() {
   );
 }
 
-const createStyles = (theme: AppTheme) => StyleSheet.create({
-  screen: {
-    backgroundColor: theme.colors.screen,
-    flex: 1,
-  },
-  content: {
-    gap: 10,
-    paddingBottom: 20,
-    paddingHorizontal: 16,
-  },
-  centeredScreen: {
-    alignItems: 'center',
-    flex: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 16,
-  },
-  headerRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: 8,
-  },
-  backButton: {
-    borderColor: theme.colors.primary,
-    borderRadius: 8,
-    borderWidth: 1,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-  },
-  backButtonText: {
-    color: theme.colors.primary,
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  pageTitle: {
-    color: theme.colors.text,
-    fontSize: 24,
-    fontWeight: '800',
-  },
-  sectionCard: {
-    backgroundColor: theme.colors.surface,
-    borderColor: theme.colors.border,
-    borderRadius: 12,
-    borderWidth: 1,
-    padding: 12,
-  },
-  fieldLabel: {
-    color: theme.colors.textMuted,
-    fontSize: 12,
-    fontWeight: '700',
-    marginBottom: 4,
-  },
-  input: {
-    backgroundColor: theme.colors.inputBackground,
-    borderColor: theme.colors.border,
-    borderRadius: 10,
-    borderWidth: 1,
-    color: theme.colors.text,
-    marginBottom: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-  },
-  dateSelector: {
-    justifyContent: 'center',
-  },
-  dateSelectorText: {
-    color: theme.colors.text,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  dropdownContainer: {
-    marginBottom: 8,
-  },
-  dropdownButton: {
-    justifyContent: 'center',
-    marginBottom: 0,
-  },
-  dropdownButtonText: {
-    color: theme.colors.text,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  dropdownMenu: {
-    backgroundColor: theme.colors.surfaceRaised,
-    borderColor: theme.colors.border,
-    borderRadius: 10,
-    borderWidth: 1,
-    marginTop: 6,
-    maxHeight: 220,
-    overflow: 'hidden',
-  },
-  dropdownScroll: {
-    maxHeight: 220,
-  },
-  dropdownItem: {
-    borderBottomColor: theme.colors.border,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-  },
-  dropdownItemText: {
-    color: theme.colors.textMuted,
-    fontSize: 14,
-  },
-  rowGroup: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: 8,
-  },
-  choiceButton: {
-    backgroundColor: theme.colors.inputBackground,
-    borderColor: theme.colors.border,
-    borderRadius: 8,
-    borderWidth: 1,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-  },
-  choiceButtonActive: {
-    backgroundColor: theme.colors.primaryMuted,
-    borderColor: theme.colors.primary,
-  },
-  choiceButtonText: {
-    color: theme.colors.textSubtle,
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  choiceButtonTextActive: {
-    color: theme.colors.primary,
-    fontWeight: '700',
-  },
-  doubleRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  halfInput: {
-    flex: 1,
-  },
-  textArea: {
-    minHeight: 78,
-    textAlignVertical: 'top',
-  },
-  submitButton: {
-    alignItems: 'center',
-    backgroundColor: theme.colors.primary,
-    borderRadius: 10,
-    paddingVertical: 12,
-  },
-  submitButtonText: {
-    color: theme.colors.iconOnPrimary,
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  actionButton: {
-    alignItems: 'center',
-    backgroundColor: theme.colors.primary,
-    borderRadius: 8,
-    marginTop: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-  },
-  actionButtonText: {
-    color: theme.colors.iconOnPrimary,
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  errorText: {
-    color: theme.colors.danger,
-    fontSize: 13,
-  },
-  dateModalOverlay: {
-    backgroundColor: theme.colors.overlay,
-    flex: 1,
-    justifyContent: 'flex-end',
-  },
-  dateModalCard: {
-    backgroundColor: theme.colors.surface,
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    paddingBottom: 24,
-    paddingHorizontal: 12,
-    paddingTop: 12,
-  },
-  dateModalHeader: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-    paddingHorizontal: 4,
-  },
-  dateModalTitle: {
-    color: theme.colors.text,
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  dateModalDoneButton: {
-    backgroundColor: theme.colors.primary,
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-  },
-  dateModalDoneText: {
-    color: theme.colors.iconOnPrimary,
-    fontSize: 12,
-    fontWeight: '700',
-  },
-});
+const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    screen: {
+      backgroundColor: theme.colors.screen,
+      flex: 1,
+    },
+    content: {
+      gap: 10,
+      paddingBottom: floatingTabBarContentBottomPadding,
+      paddingHorizontal: 16,
+    },
+    centeredScreen: {
+      alignItems: "center",
+      flex: 1,
+      justifyContent: "center",
+      paddingHorizontal: 16,
+    },
+    headerRow: {
+      alignItems: "center",
+      backgroundColor: theme.colors.liquidGlass.backgroundColor,
+      flexDirection: "row",
+      gap: 8,
+      left: 0,
+      overflow: "hidden",
+      paddingBottom: 10,
+      paddingHorizontal: 16,
+      position: "absolute",
+      right: 0,
+      top: 0,
+      zIndex: 20,
+    },
+    headerBlurLayer: {
+      ...StyleSheet.absoluteFillObject,
+    },
+    backButton: {
+      borderColor: theme.colors.primary,
+      borderRadius: 8,
+      borderWidth: 1,
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+    },
+    backButtonText: {
+      color: theme.colors.primary,
+      fontSize: 12,
+      fontWeight: "700",
+    },
+    pageTitle: {
+      color: theme.colors.text,
+      fontSize: 24,
+      fontWeight: "800",
+    },
+    sectionCard: {
+      backgroundColor: theme.colors.surface,
+      borderColor: theme.colors.border,
+      borderRadius: 10,
+      borderWidth: StyleSheet.hairlineWidth,
+      padding: 12,
+      shadowColor: theme.colors.liquidGlass.shadowColor,
+      shadowOffset: { height: 3, width: 0 },
+      shadowOpacity: theme.scheme === "dark" ? 0.14 : 0.06,
+      shadowRadius: 8,
+    },
+    fieldLabel: {
+      color: theme.colors.textMuted,
+      fontSize: 12,
+      fontWeight: "700",
+      marginBottom: 4,
+    },
+    input: {
+      backgroundColor: theme.colors.inputBackground,
+      borderColor: theme.colors.border,
+      borderRadius: 9,
+      borderWidth: StyleSheet.hairlineWidth,
+      color: theme.colors.text,
+      marginBottom: 8,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+    },
+    dateSelector: {
+      justifyContent: "center",
+    },
+    dateSelectorText: {
+      color: theme.colors.text,
+      fontSize: 14,
+      fontWeight: "600",
+    },
+    dropdownContainer: {
+      marginBottom: 8,
+    },
+    dropdownButton: {
+      justifyContent: "center",
+      marginBottom: 0,
+    },
+    dropdownButtonText: {
+      color: theme.colors.text,
+      fontSize: 14,
+      fontWeight: "600",
+    },
+    dropdownMenu: {
+      backgroundColor: theme.colors.surfaceRaised,
+      borderColor: theme.colors.border,
+      borderRadius: 9,
+      borderWidth: StyleSheet.hairlineWidth,
+      marginTop: 6,
+      maxHeight: 220,
+      overflow: "hidden",
+    },
+    dropdownScroll: {
+      maxHeight: 220,
+    },
+    dropdownItem: {
+      borderBottomColor: theme.colors.border,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+    },
+    dropdownItemText: {
+      color: theme.colors.textMuted,
+      fontSize: 14,
+    },
+    rowGroup: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 8,
+      marginBottom: 8,
+    },
+    choiceButton: {
+      backgroundColor: theme.colors.inputBackground,
+      borderColor: theme.colors.border,
+      borderRadius: 8,
+      borderWidth: StyleSheet.hairlineWidth,
+      paddingHorizontal: 10,
+      paddingVertical: 8,
+    },
+    choiceButtonActive: {
+      backgroundColor: theme.colors.primaryMuted,
+      borderColor: theme.colors.primary,
+    },
+    choiceButtonText: {
+      color: theme.colors.textSubtle,
+      fontSize: 12,
+      fontWeight: "600",
+    },
+    choiceButtonTextActive: {
+      color: theme.colors.primary,
+      fontWeight: "700",
+    },
+    doubleRow: {
+      flexDirection: "row",
+      gap: 8,
+    },
+    halfInput: {
+      flex: 1,
+    },
+    textArea: {
+      minHeight: 78,
+      textAlignVertical: "top",
+    },
+    submitButton: {
+      alignItems: "center",
+      backgroundColor: theme.colors.primary,
+      borderRadius: 9,
+      paddingVertical: 12,
+    },
+    submitButtonText: {
+      color: theme.colors.iconOnPrimary,
+      fontSize: 15,
+      fontWeight: "700",
+    },
+    actionButton: {
+      alignItems: "center",
+      backgroundColor: theme.colors.primary,
+      borderRadius: 8,
+      marginTop: 10,
+      paddingHorizontal: 14,
+      paddingVertical: 10,
+    },
+    actionButtonText: {
+      color: theme.colors.iconOnPrimary,
+      fontSize: 14,
+      fontWeight: "700",
+    },
+    errorText: {
+      color: theme.colors.danger,
+      fontSize: 13,
+    },
+    dateModalOverlay: {
+      backgroundColor: theme.colors.overlay,
+      flex: 1,
+      justifyContent: "flex-end",
+    },
+    dateModalCard: {
+      backgroundColor: theme.colors.modalSurface,
+      borderTopLeftRadius: 16,
+      borderTopRightRadius: 16,
+      paddingBottom: 24,
+      paddingHorizontal: 12,
+      paddingTop: 12,
+    },
+    dateModalHeader: {
+      alignItems: "center",
+      flexDirection: "row",
+      justifyContent: "space-between",
+      marginBottom: 8,
+      paddingHorizontal: 4,
+    },
+    dateModalTitle: {
+      color: theme.colors.text,
+      fontSize: 16,
+      fontWeight: "700",
+    },
+    dateModalDoneButton: {
+      backgroundColor: theme.colors.primary,
+      borderRadius: 8,
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+    },
+    dateModalDoneText: {
+      color: theme.colors.iconOnPrimary,
+      fontSize: 12,
+      fontWeight: "700",
+    },
+  });

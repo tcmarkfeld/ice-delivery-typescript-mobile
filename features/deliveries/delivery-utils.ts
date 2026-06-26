@@ -1,19 +1,19 @@
-import { Delivery } from '@/api/types';
-import { addDaysToDateKey } from '@/features/date/date-key-utils';
+import { Delivery } from "@/api/types";
+import { addDaysToDateKey } from "@/features/date/date-key-utils";
 
 export enum IceType {
-  Bagged = 'bagged ice',
-  Loose = 'loose ice',
+  Bagged = "bagged ice",
+  Loose = "loose ice",
 }
 
 export enum CoolerSize {
-  Quart40 = '40 quart',
-  Quart62 = '62 quart',
-  Quart200 = 'big ass 200 qt',
+  Quart40 = "40 quart",
+  Quart62 = "62 quart",
+  Quart200 = "big ass 200 qt",
 }
 
 export enum BusinessTimeZone {
-  Eastern = 'America/New_York',
+  Eastern = "America/New_York",
 }
 
 export interface DeliverySummary {
@@ -39,7 +39,7 @@ const bagMultiplierByCoolerSize: Record<CoolerSize, number> = {
 const toLowerTrimmed = (value: string): string => value.trim().toLowerCase();
 
 export const toCount = (value: string | number): number => {
-  if (typeof value === 'number') {
+  if (typeof value === "number") {
     return value;
   }
 
@@ -55,17 +55,17 @@ export const getBusinessDateKey = (offsetDays = 0): string => {
   const date = new Date();
   date.setDate(date.getDate() + offsetDays);
 
-  const formatter = new Intl.DateTimeFormat('en-US', {
+  const formatter = new Intl.DateTimeFormat("en-US", {
     timeZone: BusinessTimeZone.Eastern,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
   });
 
   const parts = formatter.formatToParts(date);
-  const year = parts.find((part) => part.type === 'year')?.value ?? '0000';
-  const month = parts.find((part) => part.type === 'month')?.value ?? '00';
-  const day = parts.find((part) => part.type === 'day')?.value ?? '00';
+  const year = parts.find((part) => part.type === "year")?.value ?? "0000";
+  const month = parts.find((part) => part.type === "month")?.value ?? "00";
+  const day = parts.find((part) => part.type === "day")?.value ?? "00";
 
   return `${year}-${month}-${day}`;
 };
@@ -92,9 +92,9 @@ enum DeliveryNeighborhood {
 }
 
 enum WhaleheadAddressPrefix {
-  C = 'C',
-  W = 'W',
-  L = 'L',
+  C = "C",
+  W = "W",
+  L = "L",
 }
 
 const neighborhoodSortOrder = [
@@ -102,7 +102,7 @@ const neighborhoodSortOrder = [
 ];
 
 const neighborhoodSortPriority = new Map<number, number>(
-  neighborhoodSortOrder.map((neighborhood, index) => [neighborhood, index])
+  neighborhoodSortOrder.map((neighborhood, index) => [neighborhood, index]),
 );
 
 const whaleheadAddressPrefixPriority: Record<WhaleheadAddressPrefix, number> = {
@@ -119,9 +119,12 @@ const getNeighborhoodSortPriority = (neighborhood: string): number => {
 };
 
 const getWhaleheadAddressPrefix = (
-  address: string
+  address: string,
 ): WhaleheadAddressPrefix | null => {
-  const prefix = address.replace(/[^a-zA-Z]/g, '').toUpperCase().slice(0, 1);
+  const prefix = address
+    .replace(/[^a-zA-Z]/g, "")
+    .toUpperCase()
+    .slice(0, 1);
 
   if (prefix === WhaleheadAddressPrefix.C) {
     return WhaleheadAddressPrefix.C;
@@ -147,7 +150,7 @@ const getWhaleheadAddressPrefixPriority = (address: string): number => {
 
 const compareWhaleheadAddresses = (
   leftAddress: string,
-  rightAddress: string
+  rightAddress: string,
 ): number => {
   const leftAddressValue = getAddressHouseNumber(leftAddress);
   const rightAddressValue = getAddressHouseNumber(rightAddress);
@@ -196,7 +199,7 @@ const compareDeliveryAddresses = (left: Delivery, right: Delivery): number => {
   if (neighborhood === DeliveryNeighborhood.Whalehead) {
     return compareWhaleheadAddresses(
       left.delivery_address,
-      right.delivery_address
+      right.delivery_address,
     );
   }
 
@@ -228,7 +231,7 @@ export const sortDeliveries = (deliveries: Delivery[]): Delivery[] => {
 
 export const buildDeliverySummary = (
   deliveries: Delivery[],
-  todayDateKey: string
+  todayDateKey: string,
 ): DeliverySummary => {
   const yesterdayDateKey = addDaysToDateKey(todayDateKey, -1);
   const summary: DeliverySummary = {
@@ -265,17 +268,20 @@ export const buildDeliverySummary = (
 
       if (iceType === IceType.Bagged && coolerSize === CoolerSize.Quart40) {
         summary.bagged40Count += coolerCount;
-        summary.totalIceBags += coolerCount * bagMultiplierByCoolerSize[CoolerSize.Quart40];
+        summary.totalIceBags +=
+          coolerCount * bagMultiplierByCoolerSize[CoolerSize.Quart40];
       }
 
       if (iceType === IceType.Bagged && coolerSize === CoolerSize.Quart62) {
         summary.bagged62Count += coolerCount;
-        summary.totalIceBags += coolerCount * bagMultiplierByCoolerSize[CoolerSize.Quart62];
+        summary.totalIceBags +=
+          coolerCount * bagMultiplierByCoolerSize[CoolerSize.Quart62];
       }
 
       if (iceType === IceType.Bagged && coolerSize === CoolerSize.Quart200) {
         summary.bagged200Count += coolerCount;
-        summary.totalIceBags += coolerCount * bagMultiplierByCoolerSize[CoolerSize.Quart200];
+        summary.totalIceBags +=
+          coolerCount * bagMultiplierByCoolerSize[CoolerSize.Quart200];
       }
     }
 

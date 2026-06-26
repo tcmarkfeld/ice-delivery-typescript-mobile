@@ -1,10 +1,17 @@
-import { PropsWithChildren, createContext, useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  PropsWithChildren,
+  createContext,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
 import {
   clearStoredAuthToken,
   getStoredAuthToken,
   setStoredAuthToken,
-} from '@/auth/session-token-storage';
+} from "@/auth/session-token-storage";
 
 export interface SessionContextValue {
   authToken: string | null;
@@ -20,7 +27,8 @@ const defaultContextValue: SessionContextValue = {
   clearAuthToken: async () => {},
 };
 
-export const SessionContext = createContext<SessionContextValue>(defaultContextValue);
+export const SessionContext =
+  createContext<SessionContextValue>(defaultContextValue);
 
 export const SessionProvider = ({ children }: PropsWithChildren) => {
   const [authToken, setAuthTokenState] = useState<string | null>(null);
@@ -53,8 +61,12 @@ export const SessionProvider = ({ children }: PropsWithChildren) => {
       setAuthToken,
       clearAuthToken,
     }),
-    [authToken, clearAuthToken, isHydratingSession, setAuthToken]
+    [authToken, clearAuthToken, isHydratingSession, setAuthToken],
   );
 
-  return <SessionContext.Provider value={contextValue}>{children}</SessionContext.Provider>;
+  return (
+    <SessionContext.Provider value={contextValue}>
+      {children}
+    </SessionContext.Provider>
+  );
 };

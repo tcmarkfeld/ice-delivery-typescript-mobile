@@ -20,6 +20,7 @@ import { useDeliveriesByDateRangeQuery } from "@/api/queries/use-deliveries-quer
 import { Delivery } from "@/api/types";
 import { DeliveryCountSummary } from "@/components/delivery/delivery-count-summary";
 import { DeliveryListItem } from "@/components/delivery/delivery-list-item";
+import { floatingTabBarContentBottomPadding } from "@/constants/navigation";
 import { AppTheme } from "@/constants/theme";
 import {
   formatDateRangeLabel,
@@ -33,6 +34,7 @@ import {
 } from "@/features/deliveries/delivery-utils";
 import { useAppTheme } from "@/hooks/use-app-theme";
 import { useSession } from "@/hooks/use-session";
+import { useFloatingTabBar } from "@/providers/floating-tab-bar-provider";
 
 enum DateField {
   Start = "start",
@@ -44,6 +46,7 @@ export default function TomorrowDeliveriesScreen() {
   const styles = useMemo(() => createStyles(theme), [theme]);
   const insets = useSafeAreaInsets();
   const { authToken } = useSession();
+  const { handleScroll } = useFloatingTabBar();
 
   const tomorrowDateKey = getBusinessDateKey(1);
   const [startDate, setStartDate] = useState<string>(tomorrowDateKey);
@@ -225,6 +228,7 @@ export default function TomorrowDeliveriesScreen() {
           contentContainerStyle={styles.listContent}
           data={sortedDeliveries}
           keyExtractor={(item, index) => `${String(item.id)}-${index}`}
+          onScroll={handleScroll}
           ListHeaderComponent={
             <DeliveryCountSummary
               heading="Selected Range Counts"
@@ -246,194 +250,196 @@ export default function TomorrowDeliveriesScreen() {
               </Text>
             </View>
           }
+          scrollEventThrottle={16}
         />
       ) : null}
     </View>
   );
 }
 
-const createStyles = (theme: AppTheme) => StyleSheet.create({
-  screen: {
-    backgroundColor: theme.colors.screen,
-    flex: 1,
-  },
-  headerRow: {
-    alignItems: "center",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingBottom: 12,
-    paddingHorizontal: 16,
-  },
-  titleRow: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: 8,
-  },
-  pageTitle: {
-    color: theme.colors.text,
-    fontSize: 24,
-    fontWeight: "800",
-  },
-  backButton: {
-    alignItems: "center",
-    borderColor: theme.colors.primary,
-    borderRadius: 8,
-    borderWidth: 1,
-    height: 34,
-    justifyContent: "center",
-    width: 34,
-  },
-  refreshButton: {
-    alignItems: "center",
-    backgroundColor: theme.colors.primary,
-    borderRadius: 8,
-    justifyContent: "center",
-    minHeight: 38,
-    minWidth: 38,
-  },
-  dateFilterCard: {
-    backgroundColor: theme.colors.surface,
-    borderColor: theme.colors.border,
-    borderRadius: 12,
-    borderWidth: 1,
-    marginBottom: 10,
-    marginHorizontal: 16,
-    padding: 10,
-  },
-  dateFilterHeader: {
-    alignItems: "center",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 8,
-  },
-  dateFilterTitle: {
-    color: theme.colors.text,
-    fontSize: 14,
-    fontWeight: "800",
-  },
-  resetRangeButton: {
-    backgroundColor: theme.colors.primaryMuted,
-    borderColor: theme.colors.primary,
-    borderRadius: 8,
-    borderWidth: 1,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-  },
-  resetRangeButtonText: {
-    color: theme.colors.primaryText,
-    fontSize: 12,
-    fontWeight: "700",
-  },
-  dateRow: {
-    flexDirection: "row",
-    gap: 10,
-  },
-  dateField: {
-    flex: 1,
-  },
-  dateLabel: {
-    color: theme.colors.textSubtle,
-    fontSize: 12,
-    fontWeight: "700",
-    marginBottom: 4,
-  },
-  dateSelector: {
-    backgroundColor: theme.colors.inputBackground,
-    borderColor: theme.colors.borderStrong,
-    borderRadius: 10,
-    borderWidth: 1,
-    minHeight: 40,
-    justifyContent: "center",
-    paddingHorizontal: 12,
-  },
-  dateSelectorText: {
-    color: theme.colors.text,
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  dateRangeText: {
-    color: theme.colors.textSubtle,
-    fontSize: 12,
-    marginTop: 8,
-  },
-  iosPickerCard: {
-    backgroundColor: theme.colors.surface,
-    borderColor: theme.colors.border,
-    borderRadius: 12,
-    borderWidth: 1,
-    marginBottom: 10,
-    marginHorizontal: 16,
-    overflow: "hidden",
-  },
-  iosPickerHeader: {
-    alignItems: "center",
-    borderBottomColor: theme.colors.border,
-    borderBottomWidth: 1,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  iosPickerTitle: {
-    color: theme.colors.text,
-    fontSize: 13,
-    fontWeight: "700",
-  },
-  iosPickerDoneButton: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-  },
-  iosPickerDoneText: {
-    color: theme.colors.primary,
-    fontSize: 13,
-    fontWeight: "700",
-  },
-  listContent: {
-    gap: 10,
-    paddingBottom: 20,
-    paddingHorizontal: 16,
-  },
-  centeredScreen: {
-    alignItems: "center",
-    flex: 1,
-    justifyContent: "center",
-    paddingHorizontal: 16,
-  },
-  errorText: {
-    color: theme.colors.danger,
-    fontSize: 14,
-    marginBottom: 10,
-    textAlign: "center",
-  },
-  retryButton: {
-    backgroundColor: theme.colors.primary,
-    borderRadius: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-  },
-  retryButtonText: {
-    color: theme.colors.iconOnPrimary,
-    fontSize: 14,
-    fontWeight: "700",
-  },
-  emptyStateCard: {
-    alignItems: "center",
-    backgroundColor: theme.colors.surface,
-    borderColor: theme.colors.border,
-    borderRadius: 12,
-    borderWidth: 1,
-    paddingHorizontal: 16,
-    paddingVertical: 22,
-  },
-  emptyTitle: {
-    color: theme.colors.text,
-    fontSize: 18,
-    fontWeight: "800",
-  },
-  emptyBody: {
-    color: theme.colors.textSubtle,
-    fontSize: 14,
-    marginTop: 6,
-    textAlign: "center",
-  },
-});
+const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    screen: {
+      backgroundColor: theme.colors.screen,
+      flex: 1,
+    },
+    headerRow: {
+      alignItems: "center",
+      flexDirection: "row",
+      justifyContent: "space-between",
+      paddingBottom: 12,
+      paddingHorizontal: 16,
+    },
+    titleRow: {
+      alignItems: "center",
+      flexDirection: "row",
+      gap: 8,
+    },
+    pageTitle: {
+      color: theme.colors.text,
+      fontSize: 24,
+      fontWeight: "800",
+    },
+    backButton: {
+      alignItems: "center",
+      borderColor: theme.colors.primary,
+      borderRadius: 9,
+      borderWidth: StyleSheet.hairlineWidth,
+      height: 34,
+      justifyContent: "center",
+      width: 34,
+    },
+    refreshButton: {
+      alignItems: "center",
+      backgroundColor: theme.colors.primary,
+      borderRadius: 9,
+      justifyContent: "center",
+      minHeight: 38,
+      minWidth: 38,
+    },
+    dateFilterCard: {
+      backgroundColor: theme.colors.surface,
+      borderColor: theme.colors.border,
+      borderRadius: 10,
+      borderWidth: StyleSheet.hairlineWidth,
+      marginBottom: 10,
+      marginHorizontal: 16,
+      padding: 10,
+    },
+    dateFilterHeader: {
+      alignItems: "center",
+      flexDirection: "row",
+      justifyContent: "space-between",
+      marginBottom: 8,
+    },
+    dateFilterTitle: {
+      color: theme.colors.text,
+      fontSize: 14,
+      fontWeight: "800",
+    },
+    resetRangeButton: {
+      backgroundColor: theme.colors.primaryMuted,
+      borderColor: theme.colors.primary,
+      borderRadius: 9,
+      borderWidth: StyleSheet.hairlineWidth,
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+    },
+    resetRangeButtonText: {
+      color: theme.colors.primaryText,
+      fontSize: 12,
+      fontWeight: "700",
+    },
+    dateRow: {
+      flexDirection: "row",
+      gap: 10,
+    },
+    dateField: {
+      flex: 1,
+    },
+    dateLabel: {
+      color: theme.colors.textSubtle,
+      fontSize: 12,
+      fontWeight: "700",
+      marginBottom: 4,
+    },
+    dateSelector: {
+      backgroundColor: theme.colors.inputBackground,
+      borderColor: theme.colors.borderStrong,
+      borderRadius: 9,
+      borderWidth: StyleSheet.hairlineWidth,
+      minHeight: 40,
+      justifyContent: "center",
+      paddingHorizontal: 12,
+    },
+    dateSelectorText: {
+      color: theme.colors.text,
+      fontSize: 14,
+      fontWeight: "600",
+    },
+    dateRangeText: {
+      color: theme.colors.textSubtle,
+      fontSize: 12,
+      marginTop: 8,
+    },
+    iosPickerCard: {
+      backgroundColor: theme.colors.modalSurface,
+      borderColor: theme.colors.border,
+      borderRadius: 10,
+      borderWidth: StyleSheet.hairlineWidth,
+      marginBottom: 10,
+      marginHorizontal: 16,
+      overflow: "hidden",
+    },
+    iosPickerHeader: {
+      alignItems: "center",
+      borderBottomColor: theme.colors.border,
+      borderBottomWidth: 1,
+      flexDirection: "row",
+      justifyContent: "space-between",
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+    },
+    iosPickerTitle: {
+      color: theme.colors.text,
+      fontSize: 13,
+      fontWeight: "700",
+    },
+    iosPickerDoneButton: {
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+    },
+    iosPickerDoneText: {
+      color: theme.colors.primary,
+      fontSize: 13,
+      fontWeight: "700",
+    },
+    listContent: {
+      gap: 10,
+      paddingBottom: floatingTabBarContentBottomPadding,
+      paddingHorizontal: 16,
+    },
+    centeredScreen: {
+      alignItems: "center",
+      flex: 1,
+      justifyContent: "center",
+      paddingHorizontal: 16,
+    },
+    errorText: {
+      color: theme.colors.danger,
+      fontSize: 14,
+      marginBottom: 10,
+      textAlign: "center",
+    },
+    retryButton: {
+      backgroundColor: theme.colors.primary,
+      borderRadius: 9,
+      paddingHorizontal: 14,
+      paddingVertical: 10,
+    },
+    retryButtonText: {
+      color: theme.colors.iconOnPrimary,
+      fontSize: 14,
+      fontWeight: "700",
+    },
+    emptyStateCard: {
+      alignItems: "center",
+      backgroundColor: theme.colors.surface,
+      borderColor: theme.colors.border,
+      borderRadius: 10,
+      borderWidth: StyleSheet.hairlineWidth,
+      paddingHorizontal: 16,
+      paddingVertical: 22,
+    },
+    emptyTitle: {
+      color: theme.colors.text,
+      fontSize: 18,
+      fontWeight: "800",
+    },
+    emptyBody: {
+      color: theme.colors.textSubtle,
+      fontSize: 14,
+      marginTop: 6,
+      textAlign: "center",
+    },
+  });

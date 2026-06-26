@@ -1,18 +1,22 @@
-import * as SecureStore from 'expo-secure-store';
-import { Platform } from 'react-native';
+import * as SecureStore from "expo-secure-store";
+import { Platform } from "react-native";
 
 export enum SessionStorageKey {
-  AuthToken = 'ice_delivery_auth_token',
+  AuthToken = "ice_delivery_auth_token",
 }
 
 let inMemoryAuthToken: string | null = null;
 
 const canUseLocalStorage = (): boolean => {
-  return Platform.OS === 'web' && typeof window !== 'undefined' && !!window.localStorage;
+  return (
+    Platform.OS === "web" &&
+    typeof window !== "undefined" &&
+    !!window.localStorage
+  );
 };
 
 const isNativePlatform = (): boolean => {
-  return Platform.OS === 'ios' || Platform.OS === 'android';
+  return Platform.OS === "ios" || Platform.OS === "android";
 };
 
 export const getStoredAuthToken = async (): Promise<string | null> => {
@@ -22,7 +26,9 @@ export const getStoredAuthToken = async (): Promise<string | null> => {
   }
 
   if (isNativePlatform()) {
-    const storedToken = await SecureStore.getItemAsync(SessionStorageKey.AuthToken);
+    const storedToken = await SecureStore.getItemAsync(
+      SessionStorageKey.AuthToken,
+    );
     return storedToken;
   }
 

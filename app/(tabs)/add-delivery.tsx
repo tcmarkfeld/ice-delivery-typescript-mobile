@@ -4,6 +4,7 @@ import DateTimePicker, {
   DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
 import { useQueryClient } from "@tanstack/react-query";
+import { BlurView } from "expo-blur";
 import { router } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -25,6 +26,7 @@ import { z } from "zod";
 import { useCreateDeliveryMutation } from "@/api/queries/use-create-delivery-mutation";
 import { ApiQueryKey } from "@/api/query-keys";
 import { CreateDeliveryInput } from "@/api/types";
+import { floatingTabBarContentBottomPadding } from "@/constants/navigation";
 import { AppTheme } from "@/constants/theme";
 import {
   addDaysToDateKey,
@@ -35,6 +37,7 @@ import { neighborhoodData } from "@/features/neighborhood/constants";
 import { detectNeighborhoodFromAddress } from "@/features/neighborhood/detect-neighborhood";
 import { useAppTheme } from "@/hooks/use-app-theme";
 import { useSession } from "@/hooks/use-session";
+import { useFloatingTabBar } from "@/providers/floating-tab-bar-provider";
 
 enum IceTypeOption {
   Loose = "Loose Ice",
@@ -150,6 +153,7 @@ export default function AddDeliveryScreen() {
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
   const { authToken } = useSession();
+  const { handleScroll } = useFloatingTabBar();
 
   const createDeliveryMutation = useCreateDeliveryMutation();
   const formPlaceholderTextColor = theme.colors.textSubtle;
@@ -302,16 +306,31 @@ export default function AddDeliveryScreen() {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : undefined}
-      style={[styles.screen, { paddingTop: insets.top + 8 }]}
+      style={styles.screen}
     >
-      <ScrollView
-        contentContainerStyle={styles.content}
-        keyboardShouldPersistTaps="handled"
-      >
-        <View style={styles.headerRow}>
-          <Text style={styles.pageTitle}>Add Delivery</Text>
-        </View>
+      <View style={[styles.headerRow, { paddingTop: insets.top + 8 }]}>
+        <BlurView
+          intensity={theme.colors.liquidGlass.blurIntensity}
+          style={styles.headerBlurLayer}
+          tint={
+            theme.scheme === "dark"
+              ? "systemChromeMaterialDark"
+              : "systemUltraThinMaterialLight"
+          }
+        />
+        <Text style={styles.pageTitle}>Add Delivery</Text>
+      </View>
 
+      <ScrollView
+        contentContainerStyle={[
+          styles.content,
+          { paddingTop: insets.top + 64 },
+        ]}
+        keyboardShouldPersistTaps="handled"
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.sectionCard}>
           <Text style={styles.sectionTitle}>Customer</Text>
 
@@ -790,250 +809,266 @@ export default function AddDeliveryScreen() {
   );
 }
 
-const createStyles = (theme: AppTheme) => StyleSheet.create({
-  screen: {
-    backgroundColor: theme.colors.screen,
-    flex: 1,
-  },
-  content: {
-    gap: 10,
-    paddingHorizontal: 16,
-    paddingBottom: 20,
-  },
-  headerRow: {
-    alignItems: "center",
-    flexDirection: "row",
-    marginBottom: 4,
-  },
-  pageTitle: {
-    color: theme.colors.text,
-    fontSize: 24,
-    fontWeight: "800",
-  },
-  sectionCard: {
-    backgroundColor: theme.colors.surface,
-    borderColor: theme.colors.border,
-    borderRadius: 12,
-    borderWidth: 1,
-    padding: 12,
-  },
-  sectionTitle: {
-    color: theme.colors.textMuted,
-    fontSize: 12,
-    fontWeight: "700",
-    letterSpacing: 0.3,
-    marginBottom: 8,
-    textTransform: "uppercase",
-  },
-  fieldLabel: {
-    color: theme.colors.textMuted,
-    fontSize: 12,
-    fontWeight: "700",
-    marginBottom: 4,
-  },
-  priorityFieldLabel: {
-    color: theme.colors.textMuted,
-    fontSize: 12,
-    fontWeight: "700",
-    marginBottom: 4,
-  },
-  inlineLabel: {
-    color: theme.colors.textSubtle,
-    fontSize: 12,
-    fontWeight: "600",
-    marginBottom: 6,
-    marginTop: 4,
-  },
-  input: {
-    backgroundColor: theme.colors.inputBackground,
-    borderColor: theme.colors.border,
-    borderRadius: 10,
-    borderWidth: 1,
-    color: theme.colors.text,
-    marginBottom: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-  },
-  dateSelector: {
-    justifyContent: "center",
-  },
-  dateSelectorText: {
-    color: theme.colors.text,
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  priorityDateInput: {
-    backgroundColor: theme.colors.inputBackground,
-    borderColor: theme.colors.primaryMuted,
-    borderWidth: 1,
-    borderRadius: 10,
-    minHeight: 46,
-    paddingHorizontal: 12,
-    paddingVertical: 9,
-  },
-  priorityDateText: {
-    color: theme.colors.text,
-    fontSize: 15,
-    fontWeight: "700",
-  },
-  dropdownContainer: {
-    marginBottom: 8,
-  },
-  dropdownButton: {
-    justifyContent: "center",
-    marginBottom: 0,
-  },
-  dropdownButtonText: {
-    color: theme.colors.text,
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  dropdownMenu: {
-    backgroundColor: theme.colors.surfaceRaised,
-    borderColor: theme.colors.border,
-    borderRadius: 10,
-    borderWidth: 1,
-    marginTop: 6,
-    maxHeight: 220,
-    overflow: "hidden",
-  },
-  dropdownScroll: {
-    maxHeight: 220,
-  },
-  dropdownItem: {
-    borderBottomColor: theme.colors.border,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-  },
-  dropdownItemText: {
-    color: theme.colors.textMuted,
-    fontSize: 14,
-  },
-  dateModalOverlay: {
-    backgroundColor: theme.colors.overlay,
-    flex: 1,
-    justifyContent: "flex-end",
-  },
-  dateModalCard: {
-    backgroundColor: theme.colors.surface,
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    paddingBottom: 24,
-    paddingHorizontal: 12,
-    paddingTop: 12,
-  },
-  dateModalHeader: {
-    alignItems: "center",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 8,
-    paddingHorizontal: 4,
-  },
-  dateModalTitle: {
-    color: theme.colors.text,
-    fontSize: 16,
-    fontWeight: "700",
-  },
-  dateModalDoneButton: {
-    backgroundColor: theme.colors.primary,
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-  },
-  dateModalDoneText: {
-    color: theme.colors.iconOnPrimary,
-    fontSize: 12,
-    fontWeight: "700",
-  },
-  textArea: {
-    minHeight: 78,
-    textAlignVertical: "top",
-  },
-  rowGroup: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-    marginBottom: 8,
-  },
-  choiceButton: {
-    backgroundColor: theme.colors.inputBackground,
-    borderColor: theme.colors.border,
-    borderRadius: 8,
-    borderWidth: 1,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-  },
-  choiceButtonActive: {
-    backgroundColor: theme.colors.primaryMuted,
-    borderColor: theme.colors.primary,
-  },
-  choiceButtonText: {
-    color: theme.colors.textSubtle,
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  choiceButtonTextActive: {
-    color: theme.colors.primary,
-    fontWeight: "700",
-  },
-  doubleRow: {
-    flexDirection: "row",
-    gap: 8,
-  },
-  doubleLabelRow: {
-    flexDirection: "row",
-    gap: 8,
-  },
-  halfInput: {
-    flex: 1,
-  },
-  halfLabel: {
-    flex: 1,
-  },
-  tipHighlightCard: {
-    backgroundColor: theme.colors.surface,
-    borderColor: theme.colors.tileEmphasisBorder,
-    borderRadius: 10,
-    borderWidth: 1,
-    marginBottom: 8,
-    marginTop: 0,
-    padding: 8,
-  },
-  tipHighlightTitle: {
-    color: theme.colors.textMuted,
-    fontSize: 12,
-    fontWeight: "700",
-    marginBottom: 4,
-  },
-  tipHighlightInput: {
-    backgroundColor: theme.colors.inputBackground,
-    borderColor: theme.colors.border,
-    borderRadius: 10,
-    borderWidth: 1,
-    color: theme.colors.text,
-    fontSize: 14,
-    fontWeight: "600",
-    marginBottom: 0,
-    minHeight: 44,
-  },
-  errorText: {
-    color: theme.colors.danger,
-    fontSize: 13,
-    fontWeight: "600",
-    marginBottom: 8,
-    paddingHorizontal: 2,
-  },
-  submitButton: {
-    alignItems: "center",
-    backgroundColor: theme.colors.primary,
-    borderRadius: 10,
-    marginTop: 4,
-    paddingVertical: 12,
-  },
-  submitButtonText: {
-    color: theme.colors.iconOnPrimary,
-    fontSize: 15,
-    fontWeight: "700",
-  },
-});
+const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    screen: {
+      backgroundColor: theme.colors.screen,
+      flex: 1,
+    },
+    content: {
+      gap: 10,
+      paddingHorizontal: 16,
+      paddingBottom: floatingTabBarContentBottomPadding,
+    },
+    headerRow: {
+      alignItems: "center",
+      backgroundColor: theme.colors.liquidGlass.backgroundColor,
+      flexDirection: "row",
+      left: 0,
+      overflow: "hidden",
+      paddingBottom: 10,
+      paddingHorizontal: 16,
+      position: "absolute",
+      right: 0,
+      top: 0,
+      zIndex: 20,
+    },
+    headerBlurLayer: {
+      ...StyleSheet.absoluteFillObject,
+    },
+    pageTitle: {
+      color: theme.colors.text,
+      fontSize: 24,
+      fontWeight: "800",
+    },
+    sectionCard: {
+      backgroundColor: theme.colors.surface,
+      borderColor: theme.colors.border,
+      borderRadius: 10,
+      borderWidth: StyleSheet.hairlineWidth,
+      padding: 12,
+      shadowColor: theme.colors.liquidGlass.shadowColor,
+      shadowOffset: { height: 3, width: 0 },
+      shadowOpacity: theme.scheme === "dark" ? 0.14 : 0.06,
+      shadowRadius: 8,
+    },
+    sectionTitle: {
+      color: theme.colors.textMuted,
+      fontSize: 12,
+      fontWeight: "700",
+      letterSpacing: 0.3,
+      marginBottom: 8,
+      textTransform: "uppercase",
+    },
+    fieldLabel: {
+      color: theme.colors.textMuted,
+      fontSize: 12,
+      fontWeight: "700",
+      marginBottom: 4,
+    },
+    priorityFieldLabel: {
+      color: theme.colors.textMuted,
+      fontSize: 12,
+      fontWeight: "700",
+      marginBottom: 4,
+    },
+    inlineLabel: {
+      color: theme.colors.textSubtle,
+      fontSize: 12,
+      fontWeight: "600",
+      marginBottom: 6,
+      marginTop: 4,
+    },
+    input: {
+      backgroundColor: theme.colors.inputBackground,
+      borderColor: theme.colors.border,
+      borderRadius: 9,
+      borderWidth: StyleSheet.hairlineWidth,
+      color: theme.colors.text,
+      marginBottom: 8,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+    },
+    dateSelector: {
+      justifyContent: "center",
+    },
+    dateSelectorText: {
+      color: theme.colors.text,
+      fontSize: 14,
+      fontWeight: "600",
+    },
+    priorityDateInput: {
+      backgroundColor: theme.colors.inputBackground,
+      borderColor: theme.colors.primaryMuted,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderRadius: 9,
+      minHeight: 46,
+      paddingHorizontal: 12,
+      paddingVertical: 9,
+    },
+    priorityDateText: {
+      color: theme.colors.text,
+      fontSize: 15,
+      fontWeight: "700",
+    },
+    dropdownContainer: {
+      marginBottom: 8,
+    },
+    dropdownButton: {
+      justifyContent: "center",
+      marginBottom: 0,
+    },
+    dropdownButtonText: {
+      color: theme.colors.text,
+      fontSize: 14,
+      fontWeight: "600",
+    },
+    dropdownMenu: {
+      backgroundColor: theme.colors.surfaceRaised,
+      borderColor: theme.colors.border,
+      borderRadius: 9,
+      borderWidth: StyleSheet.hairlineWidth,
+      marginTop: 6,
+      maxHeight: 220,
+      overflow: "hidden",
+    },
+    dropdownScroll: {
+      maxHeight: 220,
+    },
+    dropdownItem: {
+      borderBottomColor: theme.colors.border,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+    },
+    dropdownItemText: {
+      color: theme.colors.textMuted,
+      fontSize: 14,
+    },
+    dateModalOverlay: {
+      backgroundColor: theme.colors.overlay,
+      flex: 1,
+      justifyContent: "flex-end",
+    },
+    dateModalCard: {
+      backgroundColor: theme.colors.modalSurface,
+      borderTopLeftRadius: 16,
+      borderTopRightRadius: 16,
+      paddingBottom: 24,
+      paddingHorizontal: 12,
+      paddingTop: 12,
+    },
+    dateModalHeader: {
+      alignItems: "center",
+      flexDirection: "row",
+      justifyContent: "space-between",
+      marginBottom: 8,
+      paddingHorizontal: 4,
+    },
+    dateModalTitle: {
+      color: theme.colors.text,
+      fontSize: 16,
+      fontWeight: "700",
+    },
+    dateModalDoneButton: {
+      backgroundColor: theme.colors.primary,
+      borderRadius: 8,
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+    },
+    dateModalDoneText: {
+      color: theme.colors.iconOnPrimary,
+      fontSize: 12,
+      fontWeight: "700",
+    },
+    textArea: {
+      minHeight: 78,
+      textAlignVertical: "top",
+    },
+    rowGroup: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 8,
+      marginBottom: 8,
+    },
+    choiceButton: {
+      backgroundColor: theme.colors.inputBackground,
+      borderColor: theme.colors.border,
+      borderRadius: 8,
+      borderWidth: StyleSheet.hairlineWidth,
+      paddingHorizontal: 10,
+      paddingVertical: 8,
+    },
+    choiceButtonActive: {
+      backgroundColor: theme.colors.primaryMuted,
+      borderColor: theme.colors.primary,
+    },
+    choiceButtonText: {
+      color: theme.colors.textSubtle,
+      fontSize: 12,
+      fontWeight: "600",
+    },
+    choiceButtonTextActive: {
+      color: theme.colors.primary,
+      fontWeight: "700",
+    },
+    doubleRow: {
+      flexDirection: "row",
+      gap: 8,
+    },
+    doubleLabelRow: {
+      flexDirection: "row",
+      gap: 8,
+    },
+    halfInput: {
+      flex: 1,
+    },
+    halfLabel: {
+      flex: 1,
+    },
+    tipHighlightCard: {
+      backgroundColor: theme.colors.tileEmphasisSurface,
+      borderColor: theme.colors.tileEmphasisBorder,
+      borderRadius: 9,
+      borderWidth: StyleSheet.hairlineWidth,
+      marginBottom: 8,
+      marginTop: 0,
+      padding: 8,
+    },
+    tipHighlightTitle: {
+      color: theme.colors.textMuted,
+      fontSize: 12,
+      fontWeight: "700",
+      marginBottom: 4,
+    },
+    tipHighlightInput: {
+      backgroundColor: theme.colors.inputBackground,
+      borderColor: theme.colors.border,
+      borderRadius: 9,
+      borderWidth: StyleSheet.hairlineWidth,
+      color: theme.colors.text,
+      fontSize: 14,
+      fontWeight: "600",
+      marginBottom: 0,
+      minHeight: 44,
+    },
+    errorText: {
+      color: theme.colors.danger,
+      fontSize: 13,
+      fontWeight: "600",
+      marginBottom: 8,
+      paddingHorizontal: 2,
+    },
+    submitButton: {
+      alignItems: "center",
+      backgroundColor: theme.colors.primary,
+      borderRadius: 9,
+      marginTop: 4,
+      paddingVertical: 12,
+    },
+    submitButtonText: {
+      color: theme.colors.iconOnPrimary,
+      fontSize: 15,
+      fontWeight: "700",
+    },
+  });

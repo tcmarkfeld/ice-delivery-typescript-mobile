@@ -1,10 +1,10 @@
-import { getApiBaseUrl } from '@/api/api-environment';
+import { getApiBaseUrl } from "@/api/api-environment";
 
 export enum HttpMethod {
-  Get = 'GET',
-  Post = 'POST',
-  Put = 'PUT',
-  Delete = 'DELETE',
+  Get = "GET",
+  Post = "POST",
+  Put = "PUT",
+  Delete = "DELETE",
 }
 
 export type ApiSuccess<TData> = {
@@ -30,9 +30,9 @@ export interface ApiRequestOptions {
 
 const buildUrl = (
   path: string,
-  queryParams?: Record<string, string | number | boolean | undefined>
+  queryParams?: Record<string, string | number | boolean | undefined>,
 ): string => {
-  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
   const url = new URL(`${getApiBaseUrl()}${normalizedPath}`);
 
   if (queryParams) {
@@ -47,10 +47,10 @@ const buildUrl = (
 };
 
 const parseErrorMessage = async (response: Response): Promise<string> => {
-  const contentType = response.headers.get('content-type') ?? '';
+  const contentType = response.headers.get("content-type") ?? "";
 
   try {
-    if (contentType.includes('application/json')) {
+    if (contentType.includes("application/json")) {
       const payload = (await response.json()) as { message?: string };
       return payload.message ?? `Request failed (${response.status})`;
     }
@@ -63,9 +63,9 @@ const parseErrorMessage = async (response: Response): Promise<string> => {
 };
 
 const parseSuccessData = async <TData>(response: Response): Promise<TData> => {
-  const contentType = response.headers.get('content-type') ?? '';
+  const contentType = response.headers.get("content-type") ?? "";
 
-  if (contentType.includes('application/json')) {
+  if (contentType.includes("application/json")) {
     return (await response.json()) as TData;
   }
 
@@ -74,17 +74,17 @@ const parseSuccessData = async <TData>(response: Response): Promise<TData> => {
 
 export const httpRequest = async <TData>(
   path: string,
-  options: ApiRequestOptions = {}
+  options: ApiRequestOptions = {},
 ): Promise<ApiResult<TData>> => {
   const { method = HttpMethod.Get, body, token, queryParams } = options;
 
   const headers: Record<string, string> = {
-    Accept: 'application/json',
-    'Content-Type': 'application/json',
+    Accept: "application/json",
+    "Content-Type": "application/json",
   };
 
   if (token) {
-    headers['auth-token'] = token;
+    headers["auth-token"] = token;
   }
 
   const response = await fetch(buildUrl(path, queryParams), {

@@ -160,34 +160,38 @@ export const DeliveryListItem = ({
             formatDate(delivery.end_date)}
         </Text>
         <View style={styles.headerBadges}>
-          {isPickup ? (
-            <View style={styles.pickupBadge}>
+          {showCompletionToggle ? (
+            <Pressable
+              onPress={onToggleCompleted}
+              style={styles.completedToggle}
+            >
+              <Text style={styles.completedToggleText}>Completed</Text>
               <MaterialCommunityIcons
-                color={colors.danger}
-                name="truck-check-outline"
-                size={13}
+                color={colors.textMuted}
+                name={
+                  isCompleted ? "check-circle" : "checkbox-blank-circle-outline"
+                }
+                size={18}
               />
-              <Text style={styles.pickupBadgeText}>PICKUP TODAY</Text>
-            </View>
+            </Pressable>
           ) : null}
           {isNew ? <Text style={styles.newBadge}>NEW</Text> : null}
         </View>
       </View>
 
-      {showCompletionToggle ? (
-        <Pressable onPress={onToggleCompleted} style={styles.completedToggle}>
-          <Text style={styles.completedToggleText}>Completed:</Text>
-          <MaterialCommunityIcons
-            color={colors.textMuted}
-            name={
-              isCompleted ? "check-circle" : "checkbox-blank-circle-outline"
-            }
-            size={18}
-          />
-        </Pressable>
-      ) : null}
-
-      <Text style={styles.deliveryName}>{delivery.customer_name}</Text>
+      <View style={styles.customerRow}>
+        <Text style={styles.deliveryName}>{delivery.customer_name}</Text>
+        {isPickup ? (
+          <View style={styles.pickupBadge}>
+            <MaterialCommunityIcons
+              color={colors.danger}
+              name="truck-check-outline"
+              size={13}
+            />
+            <Text style={styles.pickupBadgeText}>PICKUP TODAY</Text>
+          </View>
+        ) : null}
+      </View>
       <View style={styles.metaRow}>
         <Text style={styles.deliveryAddress}>{delivery.delivery_address}</Text>
         <Text style={styles.deliveryMetaText}>
@@ -254,7 +258,11 @@ export const DeliveryListItem = ({
           onPress={() => callCustomer(delivery.customer_phone)}
           style={styles.deliveryActionButton}
         >
-          <MaterialCommunityIcons color={colors.primary} name="phone" size={16} />
+          <MaterialCommunityIcons
+            color={colors.primary}
+            name="phone"
+            size={16}
+          />
           <Text style={styles.deliveryActionText}>Call</Text>
         </Pressable>
         <Pressable
@@ -298,139 +306,153 @@ export const DeliveryListItem = ({
   );
 };
 
-const createStyles = (theme: AppTheme) => StyleSheet.create({
-  deliveryCard: {
-    backgroundColor: theme.colors.surface,
-    borderColor: theme.colors.border,
-    borderRadius: 12,
-    borderWidth: 1,
-    gap: 6,
-    padding: 12,
-  },
-  pickupCard: {
-    backgroundColor: theme.colors.pickupSurface,
-    borderColor: theme.colors.pickupBorder,
-  },
-  completedCard: {
-    backgroundColor: theme.colors.completedSurface,
-    borderColor: theme.colors.completedBorder,
-  },
-  deliveryHeader: {
-    alignItems: "center",
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  headerBadges: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: 6,
-  },
-  deliveryDateText: {
-    color: theme.colors.textSubtle,
-    fontSize: 13,
-    fontWeight: "600",
-  },
-  newBadge: {
-    backgroundColor: theme.colors.newSurface,
-    borderRadius: 999,
-    color: theme.colors.newText,
-    fontSize: 11,
-    fontWeight: "700",
-    overflow: "hidden",
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-  },
-  pickupBadge: {
-    alignItems: "center",
-    backgroundColor: theme.colors.dangerMuted,
-    borderColor: theme.colors.pickupBorder,
-    borderRadius: 999,
-    borderWidth: 1,
-    flexDirection: "row",
-    gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-  },
-  pickupBadgeText: {
-    color: theme.colors.danger,
-    fontSize: 11,
-    fontWeight: "800",
-  },
-  deliveryName: {
-    color: theme.colors.text,
-    fontSize: 16,
-    fontWeight: "700",
-  },
-  deliveryAddress: {
-    color: theme.colors.textMuted,
-    flex: 1,
-    fontSize: 13,
-    paddingRight: 8,
-  },
-  deliveryMetaText: {
-    color: theme.colors.primaryText,
-    fontSize: 12,
-    fontWeight: "600",
-    textAlign: "right",
-  },
-  metaRow: {
-    alignItems: "center",
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  deliveryInstructions: {
-    color: theme.colors.textSubtle,
-    fontSize: 13,
-  },
-  deliveryAddonsContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-  },
-  deliveryAddonPill: {
-    alignItems: "center",
-    borderRadius: 999,
-    borderWidth: 1,
-    flexDirection: "row",
-    gap: 5,
-    paddingHorizontal: 9,
-    paddingVertical: 5,
-  },
-  deliveryAddonsText: {
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  deliveryActions: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-    gap: 10,
-    marginTop: 2,
-  },
-  completedToggle: {
-    alignItems: "center",
-    alignSelf: "flex-start",
-    flexDirection: "row",
-    gap: 6,
-  },
-  completedToggleText: {
-    color: theme.colors.textMuted,
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  deliveryActionButton: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: 4,
-  },
-  deliveryActionText: {
-    color: theme.colors.primary,
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  deliveryDeleteActionText: {
-    color: theme.colors.danger,
-    fontSize: 12,
-    fontWeight: "700",
-  },
-});
+const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    deliveryCard: {
+      backgroundColor: theme.colors.surface,
+      borderColor: theme.colors.border,
+      borderRadius: 10,
+      borderWidth: StyleSheet.hairlineWidth,
+      gap: 8,
+      padding: 13,
+      shadowColor: theme.colors.liquidGlass.shadowColor,
+      shadowOffset: { height: 3, width: 0 },
+      shadowOpacity: theme.scheme === "dark" ? 0.18 : 0.08,
+      shadowRadius: 9,
+    },
+    pickupCard: {
+      backgroundColor: theme.colors.pickupSurface,
+      borderColor: theme.colors.pickupBorder,
+    },
+    completedCard: {
+      backgroundColor: theme.colors.completedSurface,
+      borderColor: theme.colors.completedBorder,
+    },
+    deliveryHeader: {
+      alignItems: "center",
+      flexDirection: "row",
+      justifyContent: "space-between",
+    },
+    headerBadges: {
+      alignItems: "center",
+      flexDirection: "row",
+      gap: 6,
+    },
+    deliveryDateText: {
+      color: theme.colors.textSubtle,
+      fontSize: 12,
+      fontWeight: "600",
+    },
+    newBadge: {
+      backgroundColor: theme.colors.newSurface,
+      borderRadius: 999,
+      color: theme.colors.newText,
+      fontSize: 11,
+      fontWeight: "700",
+      overflow: "hidden",
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+    },
+    pickupBadge: {
+      alignItems: "center",
+      backgroundColor: theme.colors.dangerMuted,
+      borderColor: theme.colors.pickupBorder,
+      borderRadius: 999,
+      borderWidth: 1,
+      flexDirection: "row",
+      gap: 4,
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+    },
+    pickupBadgeText: {
+      color: theme.colors.danger,
+      fontSize: 11,
+      fontWeight: "800",
+    },
+    deliveryName: {
+      color: theme.colors.text,
+      flexShrink: 1,
+      fontSize: 17,
+      fontWeight: "800",
+    },
+    customerRow: {
+      alignItems: "center",
+      flexDirection: "row",
+      gap: 8,
+      justifyContent: "space-between",
+    },
+    deliveryAddress: {
+      color: theme.colors.textMuted,
+      flex: 1,
+      fontSize: 14,
+      paddingRight: 8,
+    },
+    deliveryMetaText: {
+      color: theme.colors.primaryText,
+      fontSize: 12,
+      fontWeight: "600",
+      textAlign: "right",
+    },
+    metaRow: {
+      alignItems: "center",
+      flexDirection: "row",
+      justifyContent: "space-between",
+    },
+    deliveryInstructions: {
+      color: theme.colors.textSubtle,
+      fontSize: 13,
+    },
+    deliveryAddonsContainer: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 8,
+    },
+    deliveryAddonPill: {
+      alignItems: "center",
+      borderRadius: 999,
+      borderWidth: 1,
+      flexDirection: "row",
+      gap: 5,
+      paddingHorizontal: 9,
+      paddingVertical: 5,
+    },
+    deliveryAddonsText: {
+      fontSize: 12,
+      fontWeight: "600",
+    },
+    deliveryActions: {
+      borderTopColor: theme.colors.border,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 10,
+      justifyContent: "space-between",
+      marginTop: 4,
+      paddingTop: 8,
+    },
+    completedToggle: {
+      alignItems: "center",
+      flexDirection: "row",
+      gap: 5,
+    },
+    completedToggleText: {
+      color: theme.colors.textMuted,
+      fontSize: 11,
+      fontWeight: "700",
+    },
+    deliveryActionButton: {
+      alignItems: "center",
+      flexDirection: "row",
+      gap: 4,
+    },
+    deliveryActionText: {
+      color: theme.colors.primary,
+      fontSize: 13,
+      fontWeight: "700",
+    },
+    deliveryDeleteActionText: {
+      color: theme.colors.danger,
+      fontSize: 12,
+      fontWeight: "700",
+    },
+  });
