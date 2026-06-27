@@ -2,6 +2,11 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import * as Linking from "expo-linking";
 import { useMemo, type ComponentProps } from "react";
 import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import Animated, {
+  FadeInDown,
+  FadeOutUp,
+  LinearTransition,
+} from "react-native-reanimated";
 
 import { Delivery } from "@/api/types";
 import { AddonThemeKey, AppTheme } from "@/constants/theme";
@@ -18,6 +23,7 @@ interface DeliveryListItemProps {
   isCompleted?: boolean;
   onToggleCompleted?: () => void;
   showPickupState?: boolean;
+  showNewBadge?: boolean;
   showCompletionToggle?: boolean;
   showAddons?: boolean;
   showEditAction?: boolean;
@@ -50,6 +56,11 @@ enum AddonIconName {
   FreezePops = "ice-cream",
 }
 
+enum PickupStatusLabel {
+  Today = "PICKUP TODAY",
+  Completed = "PICKUP COMPLETED",
+}
+
 const addonThemeKeyByLabel: Record<AddonLabel, AddonThemeKey> = {
   [AddonLabel.BagLimes]: AddonThemeKey.Limes,
   [AddonLabel.BagLemons]: AddonThemeKey.Lemons,
@@ -80,7 +91,14 @@ const callCustomer = async (phone: string): Promise<void> => {
   await Linking.openURL(`tel:${phone}`);
 };
 
-const textCustomer = async (name: string, phone: string): Promise<void> => {
+const textCustomer = async (phone: string): Promise<void> => {
+  await Linking.openURL(`sms:${phone}`);
+};
+
+const textCustomerReviewRequest = async (
+  name: string,
+  phone: string,
+): Promise<void> => {
   const firstName = name.split(" ")[0] ?? "there";
   const message = `Hey ${firstName}, this is Benicio with Corolla Ice Delivery. Just wanted to thank you for your business this past week and hope you enjoyed! If you would be willing to leave us a Google review we would really appreciate it! 
   https://g.page/r/CUBe_7herDpHEAE/review`;
@@ -95,6 +113,7 @@ export const DeliveryListItem = ({
   isCompleted = false,
   onToggleCompleted,
   showPickupState = false,
+  showNewBadge = true,
   showCompletionToggle = false,
   showAddons = false,
   showEditAction = false,
@@ -108,7 +127,10 @@ export const DeliveryListItem = ({
   const endDateKey = getDateKeyFromIso(delivery.end_date);
   const yesterdayDateKey = addDaysToDateKey(todayDateKey, -1);
   const isPickup = showPickupState && endDateKey === yesterdayDateKey;
-  const isNew = startDateKey === todayDateKey;
+  const isNew = showNewBadge && startDateKey === todayDateKey;
+  const pickupStatusText = isCompleted
+    ? PickupStatusLabel.Completed
+    : PickupStatusLabel.Today;
 
   const coolerCount = toCount(delivery.cooler_num);
   const coolerPrefix = coolerCount > 1 ? `${coolerCount}x ` : "";
@@ -175,20 +197,56 @@ export const DeliveryListItem = ({
               />
             </Pressable>
           ) : null}
-          {isNew ? <Text style={styles.newBadge}>NEW</Text> : null}
         </View>
       </View>
 
       <View style={styles.customerRow}>
         <Text style={styles.deliveryName}>{delivery.customer_name}</Text>
         {isPickup ? (
-          <View style={styles.pickupBadge}>
+          <View
+            style={[
+              styles.pickupBadge,
+              isCompleted ? styles.completedPickupBadge : undefined,
+            ]}
+          >
             <MaterialCommunityIcons
-              color={colors.danger}
+              color={isCompleted ? colors.success : colors.danger}
               name="truck-check-outline"
               size={13}
             />
-            <Text style={styles.pickupBadgeText}>PICKUP TODAY</Text>
+            <Animated.Text
+              key={pickupStatusText}
+              entering={FadeInDown.duration(140)}
+              exiting={FadeOutUp.duration(110)}
+              layout={LinearTransition.duration(140)}
+              style={[
+                styles.pickupBadgeText,
+                isCompleted ? styles.completedPickupBadgeText : undefined,
+              ]}
+            >
+              {pickupStatusText}
+            </Animated.Text>
+          </View>
+        ) : isNew ? (
+          <View
+            style={[
+              styles.newBadge,
+              isCompleted ? styles.completedNewBadge : undefined,
+            ]}
+          >
+            <MaterialCommunityIcons
+              color={isCompleted ? colors.success : colors.newText}
+              name="star"
+              size={12}
+            />
+            <Text
+              style={[
+                styles.newBadgeText,
+                isCompleted ? styles.completedNewBadgeText : undefined,
+              ]}
+            >
+              NEW
+            </Text>
           </View>
         ) : null}
       </View>
@@ -266,9 +324,7 @@ export const DeliveryListItem = ({
           <Text style={styles.deliveryActionText}>Call</Text>
         </Pressable>
         <Pressable
-          onPress={() =>
-            textCustomer(delivery.customer_name, delivery.customer_phone)
-          }
+          onPress={() => textCustomer(delivery.customer_phone)}
           style={styles.deliveryActionButton}
         >
           <MaterialCommunityIcons
@@ -278,6 +334,24 @@ export const DeliveryListItem = ({
           />
           <Text style={styles.deliveryActionText}>Text</Text>
         </Pressable>
+        {isPickup ? (
+          <Pressable
+            onPress={() =>
+              textCustomerReviewRequest(
+                delivery.customer_name,
+                delivery.customer_phone,
+              )
+            }
+            style={styles.deliveryActionButton}
+          >
+            <MaterialCommunityIcons
+              color={colors.primary}
+              name="star-outline"
+              size={16}
+            />
+            <Text style={styles.deliveryActionText}>Review Text</Text>
+          </Pressable>
+        ) : null}
         {showEditAction ? (
           <Pressable onPress={onPressEdit} style={styles.deliveryActionButton}>
             <MaterialCommunityIcons
@@ -344,14 +418,28 @@ const createStyles = (theme: AppTheme) =>
       fontWeight: "600",
     },
     newBadge: {
+      alignItems: "center",
       backgroundColor: theme.colors.newSurface,
+      borderColor: theme.colors.warning,
       borderRadius: 999,
+      borderWidth: 1,
+      flexDirection: "row",
+      gap: 4,
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+    },
+    newBadgeText: {
       color: theme.colors.newText,
       fontSize: 11,
       fontWeight: "700",
       overflow: "hidden",
-      paddingHorizontal: 8,
-      paddingVertical: 3,
+    },
+    completedNewBadge: {
+      backgroundColor: theme.colors.successMuted,
+      borderColor: theme.colors.completedBorder,
+    },
+    completedNewBadgeText: {
+      color: theme.colors.success,
     },
     pickupBadge: {
       alignItems: "center",
@@ -368,6 +456,13 @@ const createStyles = (theme: AppTheme) =>
       color: theme.colors.danger,
       fontSize: 11,
       fontWeight: "800",
+    },
+    completedPickupBadge: {
+      backgroundColor: theme.colors.successMuted,
+      borderColor: theme.colors.completedBorder,
+    },
+    completedPickupBadgeText: {
+      color: theme.colors.success,
     },
     deliveryName: {
       color: theme.colors.text,

@@ -665,6 +665,7 @@ export default function AllDeliveriesScreen() {
               }
               showDeleteAction
               showEditAction
+              showNewBadge={false}
               todayDateKey={todayDateKey}
             />
           )}

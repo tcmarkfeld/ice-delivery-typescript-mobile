@@ -1,7 +1,7 @@
 {
   "name": "ice-delivery-typescript-mobile",
   "main": "expo-router/entry",
-  "version": "1.1.6",
+  "version": "1.1.7",
   "scripts": {
     "start": "expo start",
     "reset-project": "node ./scripts/reset-project.js",
@@ -53,5 +53,6 @@
     "prettier": "^3.6.2",
     "typescript": "~5.9.2"
   },
-  "private": true
+  "private": true,
+  "packageManager": "yarn@4.14.1+sha512.64df448055b2d37ba269d7db535a469b8da93f8ef1140c25fd7a83c00a8fbaacb214ca0e02553b92a2c54cef78bb67d0b4817fab02001df0e24fac0faccc3b42"
 }
