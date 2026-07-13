@@ -56,6 +56,10 @@ const toAmount = (value: string | number): number => {
   return Number.isNaN(parsedValue) ? 0 : parsedValue;
 };
 
+const normalizePhoneSearchValue = (value: string): string => {
+  return value.replace(/\D/g, "");
+};
+
 enum TipDateField {
   Start = "start",
   End = "end",
@@ -250,6 +254,7 @@ export default function AllDeliveriesScreen() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const deliveries = allDeliveriesQuery.data ?? [];
   const normalizedQuery = searchQuery.trim().toLowerCase();
+  const normalizedPhoneQuery = normalizePhoneSearchValue(searchQuery);
 
   const dateKeyToUtcDate = (dateKey: string): Date => {
     const [year, month, day] = dateKey.split("-").map(Number);
@@ -327,17 +332,23 @@ export default function AllDeliveriesScreen() {
         delivery.customer_name,
         delivery.delivery_address,
         delivery.customer_phone,
+        normalizePhoneSearchValue(delivery.customer_phone),
         delivery.customer_email,
       ]
         .join(" ")
         .toLowerCase();
 
-      return searchableText.includes(normalizedQuery);
+      return (
+        searchableText.includes(normalizedQuery) ||
+        (normalizedPhoneQuery.length > 0 &&
+          searchableText.includes(normalizedPhoneQuery))
+      );
     });
   }, [
     deliveries,
     isWeekFilterEnabled,
     normalizedQuery,
+    normalizedPhoneQuery,
     weekRange.endKey,
     weekRange.startKey,
   ]);
