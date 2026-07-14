@@ -17,6 +17,7 @@ export enum BusinessTimeZone {
 }
 
 export interface DeliverySummary {
+  deliveryCount: number;
   bagged40Count: number;
   bagged62Count: number;
   bagged200Count: number;
@@ -235,6 +236,7 @@ export const buildDeliverySummary = (
 ): DeliverySummary => {
   const yesterdayDateKey = addDaysToDateKey(todayDateKey, -1);
   const summary: DeliverySummary = {
+    deliveryCount: 0,
     bagged40Count: 0,
     bagged62Count: 0,
     bagged200Count: 0,
@@ -249,6 +251,8 @@ export const buildDeliverySummary = (
   };
 
   deliveries.forEach((delivery) => {
+    summary.deliveryCount += 1;
+
     const coolerSize = toLowerTrimmed(delivery.cooler_size);
     const iceType = toLowerTrimmed(delivery.ice_type);
     const coolerCount = toCount(delivery.cooler_num);

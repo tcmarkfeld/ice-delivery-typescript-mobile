@@ -163,15 +163,28 @@ export const DeliveryCountSummary = ({
     <View style={styles.summaryCard}>
       <View style={styles.summaryHeader}>
         <Text style={styles.summaryHeading}>{heading}</Text>
-        {summary.totalIceBags > 0 ? (
-          <SummaryTile
-            emphasis
-            label="Total Bags"
-            theme={theme}
-            value={summary.totalIceBags}
-            variant="inline"
-          />
-        ) : null}
+        <View style={styles.summaryHeaderMetrics}>
+          {summary.deliveryCount > 0 ? (
+            <SummaryTile
+              emphasis
+              label="Stops"
+              theme={theme}
+              tileStyle={styles.summaryHeaderTile}
+              value={summary.deliveryCount}
+              variant="inline"
+            />
+          ) : null}
+          {summary.totalIceBags > 0 ? (
+            <SummaryTile
+              emphasis
+              label="Total Bags"
+              theme={theme}
+              tileStyle={styles.summaryHeaderTile}
+              value={summary.totalIceBags}
+              variant="inline"
+            />
+          ) : null}
+        </View>
       </View>
 
       {coolerMetrics.length > 0 ? (
@@ -245,6 +258,19 @@ const createStyles = (theme: AppTheme) =>
       justifyContent: "space-between",
       marginBottom: 2,
     },
+    summaryHeaderMetrics: {
+      flexDirection: "row",
+      flexShrink: 1,
+      flexWrap: "wrap",
+      gap: 4,
+      justifyContent: "flex-end",
+      marginLeft: 8,
+    },
+    summaryHeaderTile: {
+      minWidth: 0,
+      paddingHorizontal: 6,
+      paddingVertical: 6,
+    },
     summaryHeading: {
       color: theme.colors.text,
       fontSize: 15,
@@ -285,9 +311,8 @@ const createStyles = (theme: AppTheme) =>
     summaryTileInline: {
       alignItems: "center",
       flexDirection: "row",
-      gap: 6,
-      minWidth: 124,
-      paddingVertical: 8,
+      gap: 4,
+      minWidth: 0,
     },
     coolerTile: {
       flex: 1,
