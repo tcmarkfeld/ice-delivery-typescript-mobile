@@ -2,7 +2,7 @@
   "expo": {
     "name": "Corolla Ice Delivery",
     "slug": "ice-delivery-typescript-mobile",
-    "version": "1.1.9",
+    "version": "1.2.0",
     "orientation": "portrait",
     "icon": "./assets/images/ice-delivery-light-mode-icon.png",
     "scheme": "icedeliverytypescriptmobile",

@@ -12,7 +12,9 @@ import { Delivery } from "@/api/types";
 import { AddonThemeKey, AppTheme } from "@/constants/theme";
 import { addDaysToDateKey } from "@/features/date/date-key-utils";
 import {
+  CoolerSize,
   getDateKeyFromIso,
+  IceType,
   toCount,
 } from "@/features/deliveries/delivery-utils";
 import { useAppTheme } from "@/hooks/use-app-theme";
@@ -26,6 +28,7 @@ interface DeliveryListItemProps {
   showNewBadge?: boolean;
   showCompletionToggle?: boolean;
   showAddons?: boolean;
+  useCompactCoolerLabel?: boolean;
   showEditAction?: boolean;
   onPressEdit?: () => void;
   showDeleteAction?: boolean;
@@ -67,6 +70,48 @@ const addonThemeKeyByLabel: Record<AddonLabel, AddonThemeKey> = {
   [AddonLabel.BagOranges]: AddonThemeKey.Oranges,
   [AddonLabel.MargaritaSalt]: AddonThemeKey.MargaritaSalt,
   [AddonLabel.FreezePops]: AddonThemeKey.FreezePops,
+};
+
+const bagMultiplierByCoolerSize: Partial<Record<CoolerSize, number>> = {
+  [CoolerSize.Quart40]: 1,
+  [CoolerSize.Quart62]: 2,
+  [CoolerSize.Quart200]: 8,
+};
+
+const toLowerTrimmed = (value: string): string => value.trim().toLowerCase();
+
+const pluralize = (value: number, singularLabel: string): string => {
+  return `${value} ${singularLabel}${value === 1 ? "" : "S"}`;
+};
+
+const getCoolerDescription = (
+  delivery: Delivery,
+  todayDateKey: string,
+  useCompactCoolerLabel: boolean,
+): string => {
+  const coolerCount = toCount(delivery.cooler_num);
+  const coolerPrefix = coolerCount > 1 ? `${coolerCount}x ` : "";
+
+  if (!useCompactCoolerLabel) {
+    return `${coolerPrefix}${delivery.cooler_size} ${delivery.ice_type}`;
+  }
+
+  const coolerSize = toLowerTrimmed(delivery.cooler_size) as CoolerSize;
+  const iceType = toLowerTrimmed(delivery.ice_type);
+  const isFirstDay = getDateKeyFromIso(delivery.start_date) === todayDateKey;
+  const coolerSuffix = isFirstDay ? ` · ${delivery.cooler_size}` : "";
+
+  if (iceType === IceType.Loose) {
+    const label =
+      coolerSize === CoolerSize.Quart40
+        ? "SMALL COOLER LOOSE ICE"
+        : "BIG COOLER LOOSE ICE";
+    return `${pluralize(coolerCount, label)}${coolerSuffix}`;
+  }
+
+  const bagMultiplier = bagMultiplierByCoolerSize[coolerSize] ?? 0;
+  const bagCount = coolerCount * bagMultiplier;
+  return `${pluralize(bagCount, "BAG")}${coolerSuffix}`;
 };
 
 const formatDate = (isoDateString: string): string => {
@@ -116,6 +161,7 @@ export const DeliveryListItem = ({
   showNewBadge = true,
   showCompletionToggle = false,
   showAddons = false,
+  useCompactCoolerLabel = false,
   showEditAction = false,
   onPressEdit,
   showDeleteAction = false,
@@ -131,9 +177,11 @@ export const DeliveryListItem = ({
   const pickupStatusText = isCompleted
     ? PickupStatusLabel.Completed
     : PickupStatusLabel.Today;
-
-  const coolerCount = toCount(delivery.cooler_num);
-  const coolerPrefix = coolerCount > 1 ? `${coolerCount}x ` : "";
+  const coolerDescription = getCoolerDescription(
+    delivery,
+    todayDateKey,
+    useCompactCoolerLabel,
+  );
 
   const hasSpecialInstructions =
     delivery.special_instructions.length > 0 &&
@@ -252,10 +300,7 @@ export const DeliveryListItem = ({
       </View>
       <View style={styles.metaRow}>
         <Text style={styles.deliveryAddress}>{delivery.delivery_address}</Text>
-        <Text style={styles.deliveryMetaText}>
-          {coolerPrefix}
-          {delivery.cooler_size} {delivery.ice_type}
-        </Text>
+        <Text style={styles.deliveryMetaText}>{coolerDescription}</Text>
       </View>
 
       {showAddons && addons.length > 0 ? (

@@ -120,6 +120,7 @@ export default function TodayDeliveriesScreen() {
               showAddons
               showCompletionToggle
               showPickupState
+              useCompactCoolerLabel
               onToggleCompleted={() => {
                 const deliveryId = String(item.id);
                 setCompletedDeliveryIds((currentMap) => ({

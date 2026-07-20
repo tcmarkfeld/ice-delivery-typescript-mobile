@@ -87,7 +87,12 @@ const addDeliverySchema = z.object({
   bagOranges: z.coerce.number().int().min(0),
   margSalt: z.coerce.number().int().min(0),
   freezePops: z.coerce.number().int().min(0),
-  tip: z.coerce.number().min(0),
+  tip: z
+    .string()
+    .trim()
+    .min(1, "Tip is required.")
+    .regex(/^\d+(\.\d{1,2})?$/, "Enter a valid tip.")
+    .transform(Number),
   deliveryTime: z.string().trim(),
   dayOrNight: z.enum(DayOrNightOption).optional(),
 });
@@ -112,7 +117,7 @@ const addDeliveryDefaultValues: AddDeliveryFormInput = {
   bagOranges: 0,
   margSalt: 0,
   freezePops: 0,
-  tip: 0,
+  tip: "",
   deliveryTime: "",
   dayOrNight: undefined,
 };
@@ -727,17 +732,16 @@ export default function AddDeliveryScreen() {
               name="tip"
               render={({ field: { onChange, value } }) => (
                 <TextInput
-                  keyboardType="number-pad"
-                  onChangeText={(nextValue) =>
-                    onChange(Number.parseInt(nextValue || "0", 10) || 0)
-                  }
+                  keyboardType="decimal-pad"
+                  onChangeText={onChange}
                   placeholder="Tip amount"
                   placeholderTextColor={formPlaceholderTextColor}
                   style={[styles.input, styles.tipHighlightInput]}
-                  value={String(value)}
+                  value={value}
                 />
               )}
             />
+            {renderFieldError(errors.tip?.message, styles)}
           </View>
 
           <Text style={styles.fieldLabel}>Special Instructions</Text>

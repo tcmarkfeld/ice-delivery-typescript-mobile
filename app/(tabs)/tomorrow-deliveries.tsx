@@ -238,7 +238,11 @@ export default function TomorrowDeliveriesScreen() {
           onRefresh={() => deliveriesQuery.refetch()}
           refreshing={deliveriesQuery.isRefetching}
           renderItem={({ item }: { item: Delivery }) => (
-            <DeliveryListItem delivery={item} todayDateKey={startDate} />
+            <DeliveryListItem
+              delivery={item}
+              todayDateKey={startDate}
+              useCompactCoolerLabel
+            />
           )}
           ListEmptyComponent={
             <View style={styles.emptyStateCard}>

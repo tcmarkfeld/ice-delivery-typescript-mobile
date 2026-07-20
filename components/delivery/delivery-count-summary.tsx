@@ -166,11 +166,15 @@ export const DeliveryCountSummary = ({
         <View style={styles.summaryHeaderMetrics}>
           {summary.deliveryCount > 0 ? (
             <SummaryTile
+              backgroundColor={colors.newSurface}
+              borderColor={colors.warning}
               emphasis
               label="Stops"
+              labelColor={colors.newText}
               theme={theme}
               tileStyle={styles.summaryHeaderTile}
               value={summary.deliveryCount}
+              valueColor={colors.newText}
               variant="inline"
             />
           ) : null}
