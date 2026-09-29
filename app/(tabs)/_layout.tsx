@@ -1,8 +1,8 @@
-import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
-import { CommonActions } from "@react-navigation/native";
 import { BlurView } from "expo-blur";
 import * as Haptics from "expo-haptics";
 import { Redirect, Tabs } from "expo-router";
+import { CommonActions } from "expo-router/react-navigation";
+import { BottomTabBarProps } from "expo-router/tabs";
 import React from "react";
 import {
   Animated,
@@ -10,6 +10,7 @@ import {
   Platform,
   Pressable,
   StyleSheet,
+  useAnimatedValue,
   useWindowDimensions,
   View,
 } from "react-native";
@@ -38,7 +39,7 @@ type VisibleTabRoute = TabRoute & { name: VisibleTabRouteName };
 
 const tabIconNameByRoute: Record<VisibleTabRouteName, TabIconName> = {
   index: "house.fill",
-  "add-delivery": "plus.circle.fill",
+  "add-delivery": "plus",
   "all-deliveries": "truck.box.fill",
 };
 
@@ -84,8 +85,8 @@ function FloatingTabBar({ descriptors, navigation, state }: BottomTabBarProps) {
   const glass = theme.colors.liquidGlass;
   const { compactProgress } = useFloatingTabBar();
   const { width: windowWidth } = useWindowDimensions();
-  const selectedTabAnimation = React.useRef(new Animated.Value(0)).current;
-  const tabBarScaleAnimation = React.useRef(new Animated.Value(1)).current;
+  const selectedTabAnimation = useAnimatedValue(0);
+  const tabBarScaleAnimation = useAnimatedValue(1);
   const expandedTabBarWidth = Math.max(windowWidth - 56, 260);
   const compactTabBarWidth = Math.max(windowWidth * 0.54, 210);
   const tabBarWidth = interpolate(
@@ -121,6 +122,14 @@ function FloatingTabBar({ descriptors, navigation, state }: BottomTabBarProps) {
     inputRange: visibleRoutes.map((_, index) => index),
     outputRange: visibleRoutes.map(
       (_, index) => getTabCenterX(index) - selectedIconCircleWidth / 2,
+    ),
+  });
+
+  // The filled Add button is its own selected state, so the pill fades out over it.
+  const selectedIndicatorOpacity = selectedTabAnimation.interpolate({
+    inputRange: visibleRoutes.map((_, index) => index),
+    outputRange: visibleRoutes.map((route) =>
+      route.name === "add-delivery" ? 0 : 1,
     ),
   });
 
@@ -209,6 +218,7 @@ function FloatingTabBar({ descriptors, navigation, state }: BottomTabBarProps) {
               borderRadius: iconCircleHeight / 2,
               backgroundColor: glass.selectedBackgroundColor,
               borderColor: glass.selectedBorderColor,
+              opacity: selectedIndicatorOpacity,
               transform: [{ translateX: selectedIndicatorTranslateX }],
             },
           ]}
@@ -222,9 +232,12 @@ function FloatingTabBar({ descriptors, navigation, state }: BottomTabBarProps) {
           const options = descriptors[route.key].options;
           const accessibilityLabel =
             options.tabBarAccessibilityLabel ?? options.title ?? route.name;
-          const color = focused
-            ? theme.colors.primary
-            : glass.inactiveIconColor;
+          const isAddRoute = route.name === "add-delivery";
+          const color = isAddRoute
+            ? theme.colors.onPrimary
+            : focused
+              ? theme.colors.primary
+              : glass.inactiveIconColor;
 
           return (
             <Pressable
@@ -265,11 +278,18 @@ function FloatingTabBar({ descriptors, navigation, state }: BottomTabBarProps) {
                 style={[
                   styles.iconCircle,
                   {
-                    width: inactiveIconCircleWidth,
+                    width: isAddRoute
+                      ? iconCircleHeight
+                      : inactiveIconCircleWidth,
                     height: iconCircleHeight,
                     borderRadius: iconCircleHeight / 2,
                   },
-                  styles.transparentIconCircle,
+                  isAddRoute
+                    ? {
+                        backgroundColor: theme.colors.primary,
+                        borderColor: theme.colors.primary,
+                      }
+                    : styles.transparentIconCircle,
                 ]}
               >
                 <IconSymbol size={iconSize} name={iconName} color={color} />
@@ -320,12 +340,6 @@ function TabLayoutContent() {
           href: null,
         }}
       />
-      <Tabs.Screen
-        name="edit-delivery"
-        options={{
-          href: null,
-        }}
-      />
     </Tabs>
   );
 }
@@ -354,7 +368,7 @@ const styles = StyleSheet.create({
     paddingVertical: 0,
   },
   navBlurLayer: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     overflow: "hidden",
   },
   selectedTabIndicator: {

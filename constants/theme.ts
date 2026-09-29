@@ -36,6 +36,12 @@ interface AddonPalette {
   textColor: string;
 }
 
+export interface TonePalette {
+  background: string;
+  foreground: string;
+  accent: string;
+}
+
 interface LiquidGlassPalette {
   backgroundColor: string;
   borderColor: string;
@@ -60,6 +66,14 @@ export enum AddonThemeKey {
   FreezePops = "freezePops",
 }
 
+export enum ToneKey {
+  Dropoff = "dropoff",
+  Refill = "refill",
+  Pickup = "pickup",
+  Done = "done",
+  Note = "note",
+}
+
 export interface AppTheme {
   scheme: AppColorScheme;
   colors: {
@@ -67,7 +81,6 @@ export interface AppTheme {
     surface: string;
     surfaceMuted: string;
     surfaceRaised: string;
-    modalSurface: string;
     text: string;
     textMuted: string;
     textSubtle: string;
@@ -76,25 +89,14 @@ export interface AppTheme {
     primary: string;
     primaryMuted: string;
     primaryText: string;
+    onPrimary: string;
     success: string;
-    successMuted: string;
-    warning: string;
     danger: string;
     dangerMuted: string;
     overlay: string;
-    inputBackground: string;
-    disabledSurface: string;
-    completedSurface: string;
-    completedBorder: string;
-    pickupSurface: string;
-    pickupBorder: string;
-    newSurface: string;
-    newText: string;
-    tileSurface: string;
-    tileEmphasisSurface: string;
-    tileEmphasisBorder: string;
     moneyText: string;
-    iconOnPrimary: string;
+    shadow: string;
+    tone: Record<ToneKey, TonePalette>;
     liquidGlass: LiquidGlassPalette;
     addon: Record<AddonThemeKey, AddonPalette>;
   };
@@ -105,84 +107,98 @@ export const AppThemes: Record<AppColorScheme, AppTheme> = {
   light: {
     scheme: "light",
     colors: {
-      screen: "#f3f7fb",
-      surface: "rgba(255, 255, 255, 0.82)",
-      surfaceMuted: "rgba(248, 250, 252, 0.68)",
-      surfaceRaised: "rgba(255, 255, 255, 0.92)",
-      modalSurface: "#ffffff",
-      text: "#0f172a",
-      textMuted: "#334155",
-      textSubtle: "#64748b",
-      border: "rgba(203, 213, 225, 0.58)",
-      borderStrong: "rgba(148, 163, 184, 0.68)",
-      primary: "#0a7ea4",
-      primaryMuted: "rgba(219, 234, 254, 0.72)",
-      primaryText: "#1d4ed8",
-      success: "#16a34a",
-      successMuted: "#dcfce7",
-      warning: "#a16207",
-      danger: "#b91c1c",
-      dangerMuted: "#ffe4e6",
-      overlay: "rgba(15, 23, 42, 0.5)",
-      inputBackground: "rgba(248, 250, 252, 0.58)",
-      disabledSurface: "rgba(226, 232, 240, 0.72)",
-      completedSurface: "#ddf2e5",
-      completedBorder: "#41a85f",
-      pickupSurface: "#ffe7ea",
-      pickupBorder: "#d95764",
-      newSurface: "#fff4c2",
-      newText: "#8a5a00",
-      tileSurface: "rgba(248, 250, 252, 0.54)",
-      tileEmphasisSurface: "rgba(224, 242, 254, 0.72)",
-      tileEmphasisBorder: "rgba(125, 211, 252, 0.72)",
-      moneyText: "#166534",
-      iconOnPrimary: "#ffffff",
+      screen: "#eef2f6",
+      surface: "#ffffff",
+      surfaceMuted: "#f3f6f9",
+      surfaceRaised: "#ffffff",
+      text: "#0b1b2b",
+      textMuted: "#344456",
+      textSubtle: "#66778a",
+      border: "#e2e8ef",
+      borderStrong: "#c7d1dc",
+      primary: "#0b6bd3",
+      primaryMuted: "#e5f0fd",
+      primaryText: "#0a57ad",
+      onPrimary: "#ffffff",
+      success: "#16813a",
+      danger: "#c8231a",
+      dangerMuted: "#fdecea",
+      overlay: "rgba(11, 27, 43, 0.45)",
+      moneyText: "#136b32",
+      shadow: "#1d3a5c",
+      tone: {
+        [ToneKey.Dropoff]: {
+          background: "#fff3d6",
+          foreground: "#824d00",
+          accent: "#f2a007",
+        },
+        [ToneKey.Refill]: {
+          background: "#e5f0fd",
+          foreground: "#0a57ad",
+          accent: "#3b8cf0",
+        },
+        [ToneKey.Pickup]: {
+          background: "#fde9e7",
+          foreground: "#b42318",
+          accent: "#ef4a3c",
+        },
+        [ToneKey.Done]: {
+          background: "#e2f6e8",
+          foreground: "#146c2e",
+          accent: "#22a04b",
+        },
+        [ToneKey.Note]: {
+          background: "#fff8e6",
+          foreground: "#6b4a00",
+          accent: "#e0a526",
+        },
+      },
       liquidGlass: {
-        backgroundColor: "rgba(255, 255, 255, 0.03)",
-        borderColor: "rgba(203, 213, 225, 0.46)",
-        selectedBackgroundColor: "rgba(15, 23, 42, 0.075)",
-        selectedBorderColor: "rgba(15, 23, 42, 0.13)",
-        inactiveIconColor: "rgba(15, 23, 42, 0.94)",
-        blurIntensity: 10,
-        shadowColor: "#94a3b8",
-        shadowOpacity: 0.14,
-        shadowRadius: 12,
-        shadowOffsetHeight: 5,
+        backgroundColor: "rgba(255, 255, 255, 0.55)",
+        borderColor: "rgba(203, 213, 225, 0.6)",
+        selectedBackgroundColor: "rgba(11, 107, 211, 0.1)",
+        selectedBorderColor: "rgba(11, 107, 211, 0.18)",
+        inactiveIconColor: "rgba(11, 27, 43, 0.82)",
+        blurIntensity: 40,
+        shadowColor: "#1d3a5c",
+        shadowOpacity: 0.16,
+        shadowRadius: 16,
+        shadowOffsetHeight: 6,
         elevation: 8,
         webBoxShadow:
-          "0 8px 20px rgba(15, 23, 42, 0.1), 0 1px 5px rgba(15, 23, 42, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.5)",
-        webBackdropFilter: "blur(10px) saturate(128%)",
+          "0 8px 24px rgba(15, 23, 42, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.6)",
+        webBackdropFilter: "blur(16px) saturate(140%)",
       },
       addon: {
         [AddonThemeKey.Limes]: {
-          backgroundColor: "#ecfdf3",
-          borderColor: "#86efac",
+          backgroundColor: "#eafaf0",
+          borderColor: "#9ee2b5",
           iconColor: "#15803d",
           textColor: "#166534",
         },
         [AddonThemeKey.Lemons]: {
-          backgroundColor: "#fefce8",
-          borderColor: "#fde047",
+          backgroundColor: "#fefbe6",
+          borderColor: "#f5dc6a",
           iconColor: "#a16207",
           textColor: "#854d0e",
         },
         [AddonThemeKey.Oranges]: {
-          backgroundColor: "#fff7ed",
-          borderColor: "#fdba74",
+          backgroundColor: "#fff4ea",
+          borderColor: "#fcc293",
           iconColor: "#c2410c",
           textColor: "#9a3412",
         },
         [AddonThemeKey.MargaritaSalt]: {
-          backgroundColor: "#f1f5f9",
-          borderColor: "#cbd5e1",
-          iconColor: "#334155",
+          backgroundColor: "#f1f4f8",
+          borderColor: "#cfd8e3",
+          iconColor: "#475569",
           textColor: "#334155",
         },
         [AddonThemeKey.FreezePops]: {
-          backgroundColor: "#eef2ff",
-          borderColor: "#a5b4fc",
-          iconColor: "#4338ca",
-          textColor: "#3730a3",
+          backgroundColor: "#f0efff",
+          borderColor: "#b9b4fb",
+          iconColor: "#5b45d6",
+          textColor: "#3f2fb0",
         },
       },
     },
@@ -191,53 +207,67 @@ export const AppThemes: Record<AppColorScheme, AppTheme> = {
   dark: {
     scheme: "dark",
     colors: {
-      screen: "#0b0c0d",
-      surface: "rgba(255, 255, 255, 0.055)",
-      surfaceMuted: "rgba(255, 255, 255, 0.035)",
-      surfaceRaised: "rgba(255, 255, 255, 0.08)",
-      modalSurface: "#171819",
-      text: "#e7e7ea",
-      textMuted: "#c5c7cc",
-      textSubtle: "#8b8f98",
-      border: "rgba(255, 255, 255, 0.09)",
-      borderStrong: "rgba(255, 255, 255, 0.16)",
-      primary: "#8EC5FF",
-      primaryMuted: "rgba(24, 42, 61, 0.72)",
-      primaryText: "#B9DCFF",
-      success: "#3fa05a",
-      successMuted: "#162718",
-      warning: "#d6ad3b",
-      danger: "#fca5a5",
-      dangerMuted: "#2f1719",
-      overlay: "rgba(0, 0, 0, 0.72)",
-      inputBackground: "rgba(255, 255, 255, 0.035)",
-      disabledSurface: "rgba(255, 255, 255, 0.08)",
-      completedSurface: "#1b2b20",
-      completedBorder: "#4f9f67",
-      pickupSurface: "#301d20",
-      pickupBorder: "#b85c66",
-      newSurface: "#2f2814",
-      newText: "#ffd66b",
-      tileSurface: "rgba(255, 255, 255, 0.035)",
-      tileEmphasisSurface: "rgba(24, 42, 61, 0.72)",
-      tileEmphasisBorder: "rgba(79, 127, 174, 0.72)",
-      moneyText: "#86efac",
-      iconOnPrimary: "#ffffff",
+      screen: "#080b10",
+      surface: "#131820",
+      surfaceMuted: "#1b212b",
+      surfaceRaised: "#1a2029",
+      text: "#eef2f7",
+      textMuted: "#c3ccd7",
+      textSubtle: "#8793a3",
+      border: "#232b36",
+      borderStrong: "#34404e",
+      primary: "#5aaeff",
+      primaryMuted: "#12263d",
+      primaryText: "#9fd0ff",
+      onPrimary: "#04172b",
+      success: "#4cc57a",
+      danger: "#ff8a80",
+      dangerMuted: "#3a1a18",
+      overlay: "rgba(0, 0, 0, 0.66)",
+      moneyText: "#7ee2a4",
+      shadow: "#000000",
+      tone: {
+        [ToneKey.Dropoff]: {
+          background: "#2f2410",
+          foreground: "#ffd27a",
+          accent: "#f5b43c",
+        },
+        [ToneKey.Refill]: {
+          background: "#11253b",
+          foreground: "#a6d2ff",
+          accent: "#5aaeff",
+        },
+        [ToneKey.Pickup]: {
+          background: "#361917",
+          foreground: "#ffaaa1",
+          accent: "#ff6b5e",
+        },
+        [ToneKey.Done]: {
+          background: "#10291a",
+          foreground: "#86e3a8",
+          accent: "#3cc16b",
+        },
+        [ToneKey.Note]: {
+          background: "#2a2312",
+          foreground: "#f6dc9c",
+          accent: "#d9a834",
+        },
+      },
       liquidGlass: {
-        backgroundColor: "rgba(255, 255, 255, 0.03)",
-        borderColor: "rgba(255, 255, 255, 0.11)",
-        selectedBackgroundColor: "rgba(255, 255, 255, 0.07)",
-        selectedBorderColor: "rgba(255, 255, 255, 0.11)",
-        inactiveIconColor: "rgba(255, 255, 255, 0.94)",
-        blurIntensity: 10,
+        backgroundColor: "rgba(19, 24, 32, 0.55)",
+        borderColor: "rgba(255, 255, 255, 0.1)",
+        selectedBackgroundColor: "rgba(90, 174, 255, 0.14)",
+        selectedBorderColor: "rgba(90, 174, 255, 0.22)",
+        inactiveIconColor: "rgba(255, 255, 255, 0.86)",
+        blurIntensity: 40,
         shadowColor: "#000000",
-        shadowOpacity: 0.26,
-        shadowRadius: 14,
+        shadowOpacity: 0.4,
+        shadowRadius: 18,
         shadowOffsetHeight: 8,
         elevation: 10,
         webBoxShadow:
-          "0 12px 28px rgba(0, 0, 0, 0.26), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
-        webBackdropFilter: "blur(10px) saturate(128%)",
+          "0 12px 28px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08)",
+        webBackdropFilter: "blur(16px) saturate(140%)",
       },
       addon: {
         [AddonThemeKey.Limes]: {
@@ -259,8 +289,8 @@ export const AppThemes: Record<AppColorScheme, AppTheme> = {
           textColor: "#fed7aa",
         },
         [AddonThemeKey.MargaritaSalt]: {
-          backgroundColor: "#1d1f22",
-          borderColor: "#64748b",
+          backgroundColor: "#1d2127",
+          borderColor: "#4b5868",
           iconColor: "#cbd5e1",
           textColor: "#e2e8f0",
         },
@@ -274,6 +304,14 @@ export const AppThemes: Record<AppColorScheme, AppTheme> = {
     },
     datePickerVariant: "dark",
   },
+};
+
+export const Radius = {
+  sm: 10,
+  md: 14,
+  lg: 20,
+  xl: 28,
+  pill: 999,
 };
 
 export const Fonts = Platform.select({
@@ -301,3 +339,18 @@ export const Fonts = Platform.select({
     mono: "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
   },
 });
+
+export const TypeScale = {
+  largeTitle: { fontSize: 28, fontWeight: "800", letterSpacing: -0.5 },
+  title: { fontSize: 22, fontWeight: "800", letterSpacing: -0.3 },
+  headline: { fontSize: 18, fontWeight: "700", letterSpacing: -0.2 },
+  body: { fontSize: 16, fontWeight: "400" },
+  callout: { fontSize: 15, fontWeight: "600" },
+  footnote: { fontSize: 13, fontWeight: "500" },
+  eyebrow: {
+    fontSize: 12,
+    fontWeight: "700",
+    letterSpacing: 0.8,
+    textTransform: "uppercase",
+  },
+} as const;

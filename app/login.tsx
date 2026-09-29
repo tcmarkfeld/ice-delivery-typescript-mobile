@@ -1,28 +1,51 @@
-import { useMemo, useState } from "react";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { Image } from "expo-image";
 import { router } from "expo-router";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { useMemo, useRef, useState } from "react";
+import {
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 
 import { useLoginMutation } from "@/api/queries/use-auth-mutation";
 import {
   resolveAuthToken,
   resolveLoginFailureMessage,
 } from "@/auth/resolve-auth-token";
-import { AppTheme } from "@/constants/theme";
+import { Button } from "@/components/ui/button";
+import { TextField } from "@/components/ui/text-field";
+import { AppTheme, Radius, TypeScale } from "@/constants/theme";
 import { useAppTheme } from "@/hooks/use-app-theme";
 import { useSession } from "@/hooks/use-session";
+
+const lightIcon = require("@/assets/images/ice-delivery-light-mode-icon.png");
+const darkIcon = require("@/assets/images/ice-delivery-dark-mode-icon.png");
 
 export default function LoginScreen() {
   const theme = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
+  const { colors } = theme;
   const { setAuthToken } = useSession();
+  const passwordInputRef = useRef<TextInput>(null);
 
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
 
   const loginMutation = useLoginMutation();
+  const canSubmit = email.trim().length > 0 && password.length > 0;
 
   const handleLogin = async () => {
+    if (!canSubmit || loginMutation.isPending) {
+      return;
+    }
+
     setLoginError(null);
 
     try {
@@ -55,44 +78,92 @@ export default function LoginScreen() {
   };
 
   return (
-    <View style={styles.screen}>
-      <View style={styles.panel}>
-        <Text style={styles.title}>Sign in</Text>
-        <TextInput
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      style={styles.screen}
+    >
+      <View style={styles.brand}>
+        <Image
+          accessibilityIgnoresInvertColors
+          contentFit="cover"
+          source={theme.scheme === "dark" ? darkIcon : lightIcon}
+          style={styles.logo}
+        />
+        <Text accessibilityRole="header" style={styles.title}>
+          Corolla Ice Delivery
+        </Text>
+        <Text style={styles.subtitle}>Sign in to run today&apos;s route.</Text>
+      </View>
+
+      <View style={styles.form}>
+        <TextField
           autoCapitalize="none"
+          autoComplete="email"
+          autoCorrect={false}
+          icon="email-outline"
           keyboardType="email-address"
+          label="Email"
           onChangeText={setEmail}
-          placeholder="Email"
-          placeholderTextColor={theme.colors.textSubtle}
-          style={styles.input}
+          onSubmitEditing={() => passwordInputRef.current?.focus()}
+          placeholder="you@corollaice.com"
+          returnKeyType="next"
+          submitBehavior="submit"
+          textContentType="username"
           value={email}
         />
-        <TextInput
-          autoCapitalize="none"
-          onChangeText={setPassword}
-          placeholder="Password"
-          placeholderTextColor={theme.colors.textSubtle}
-          secureTextEntry
-          style={styles.input}
-          value={password}
-        />
-        {loginError ? <Text style={styles.errorText}>{loginError}</Text> : null}
-        <Pressable
-          disabled={loginMutation.isPending || !email.trim() || !password}
+        <View>
+          <TextField
+            autoCapitalize="none"
+            autoComplete="current-password"
+            icon="lock-outline"
+            inputStyle={styles.passwordInput}
+            label="Password"
+            onChangeText={setPassword}
+            onSubmitEditing={handleLogin}
+            placeholder="Password"
+            ref={passwordInputRef}
+            returnKeyType="go"
+            secureTextEntry={!isPasswordVisible}
+            textContentType="password"
+            value={password}
+          />
+          <Pressable
+            accessibilityLabel={
+              isPasswordVisible ? "Hide password" : "Show password"
+            }
+            accessibilityRole="button"
+            hitSlop={10}
+            onPress={() => setIsPasswordVisible((current) => !current)}
+            style={styles.visibilityToggle}
+          >
+            <MaterialCommunityIcons
+              color={colors.textSubtle}
+              name={isPasswordVisible ? "eye-off-outline" : "eye-outline"}
+              size={22}
+            />
+          </Pressable>
+        </View>
+
+        {loginError ? (
+          <View accessibilityLiveRegion="polite" style={styles.errorBanner}>
+            <MaterialCommunityIcons
+              color={colors.danger}
+              name="alert-circle"
+              size={20}
+            />
+            <Text style={styles.errorText}>{loginError}</Text>
+          </View>
+        ) : null}
+
+        <Button
+          disabled={!canSubmit}
+          label="Sign in"
+          loading={loginMutation.isPending}
           onPress={handleLogin}
-          style={({ pressed }) => [
-            styles.primaryButton,
-            (loginMutation.isPending || !email.trim() || !password) &&
-              styles.primaryButtonDisabled,
-            pressed && styles.primaryButtonPressed,
-          ]}
-        >
-          <Text style={styles.primaryButtonText}>
-            {loginMutation.isPending ? "Signing in..." : "Sign in"}
-          </Text>
-        </Pressable>
+          size="lg"
+        />
       </View>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -102,51 +173,51 @@ const createStyles = (theme: AppTheme) =>
       backgroundColor: theme.colors.screen,
       flex: 1,
       justifyContent: "center",
-      paddingHorizontal: 16,
-      paddingVertical: 20,
+      paddingHorizontal: 24,
     },
-    panel: {
-      backgroundColor: theme.colors.surface,
-      borderRadius: 12,
-      padding: 16,
+    brand: {
+      alignItems: "center",
+      marginBottom: 32,
+    },
+    logo: {
+      borderRadius: Radius.xl,
+      height: 96,
+      marginBottom: 20,
+      width: 96,
     },
     title: {
+      ...TypeScale.title,
       color: theme.colors.text,
-      fontSize: 24,
-      fontWeight: "700",
-      marginBottom: 12,
+      fontSize: 26,
     },
-    input: {
-      backgroundColor: theme.colors.inputBackground,
-      borderColor: theme.colors.border,
-      borderRadius: 8,
-      borderWidth: 1,
-      color: theme.colors.text,
-      marginBottom: 12,
-      paddingHorizontal: 12,
-      paddingVertical: 10,
+    subtitle: {
+      color: theme.colors.textSubtle,
+      fontSize: 16,
+      marginTop: 6,
     },
-    primaryButton: {
+    form: {
+      gap: 16,
+    },
+    passwordInput: {
+      paddingRight: 32,
+    },
+    visibilityToggle: {
+      bottom: 15,
+      position: "absolute",
+      right: 14,
+    },
+    errorBanner: {
       alignItems: "center",
-      backgroundColor: theme.colors.primary,
-      borderRadius: 8,
-      marginTop: 8,
-      paddingVertical: 11,
-    },
-    primaryButtonDisabled: {
-      opacity: 0.45,
-    },
-    primaryButtonPressed: {
-      opacity: 0.85,
-    },
-    primaryButtonText: {
-      color: theme.colors.iconOnPrimary,
-      fontSize: 15,
-      fontWeight: "600",
+      backgroundColor: theme.colors.dangerMuted,
+      borderRadius: Radius.md,
+      flexDirection: "row",
+      gap: 8,
+      padding: 14,
     },
     errorText: {
       color: theme.colors.danger,
-      fontSize: 14,
-      marginTop: 2,
+      flex: 1,
+      fontSize: 15,
+      fontWeight: "600",
     },
   });

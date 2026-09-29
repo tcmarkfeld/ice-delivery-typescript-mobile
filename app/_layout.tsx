@@ -1,16 +1,12 @@
-import {
-  DarkTheme,
-  DefaultTheme,
-  ThemeProvider,
-} from "@react-navigation/native";
-import { Stack } from "expo-router";
+import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import {
   ActivityIndicator,
   Animated,
   Easing,
   StyleSheet,
+  useAnimatedValue,
   useWindowDimensions,
   View,
 } from "react-native";
@@ -50,6 +46,10 @@ function RootNavigator() {
     <Stack>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen
+        name="edit-delivery"
+        options={{ headerShown: false, presentation: "modal" }}
+      />
+      <Stack.Screen
         name="modal"
         options={{ presentation: "modal", title: "Modal" }}
       />
@@ -78,7 +78,7 @@ function ThemedRootLayout() {
 function ThemeModeTransitionOverlay() {
   const { themeModeTransition } = useThemeMode();
   const { height, width } = useWindowDimensions();
-  const progress = useRef(new Animated.Value(0)).current;
+  const progress = useAnimatedValue(0);
 
   useEffect(() => {
     if (!themeModeTransition) {

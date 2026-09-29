@@ -53,3 +53,26 @@ export const addDaysToDateKey = (dateKey: string, days: number): string => {
   dateValue.setDate(dateValue.getDate() + days);
   return toIsoDateKey(dateValue);
 };
+
+export interface DateKeyRange {
+  startKey: string;
+  endKey: string;
+}
+
+/** Monday–Sunday week containing `dateKey`, shifted by `weekOffset` weeks. */
+export const getWeekRange = (dateKey: string, weekOffset = 0): DateKeyRange => {
+  const dayOfWeek = parseIsoDateKey(dateKey).getDay();
+  const daysFromMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+  const startKey = addDaysToDateKey(dateKey, -daysFromMonday + weekOffset * 7);
+
+  return { startKey, endKey: addDaysToDateKey(startKey, 6) };
+};
+
+export const getMonthRange = (dateKey: string): DateKeyRange => {
+  const date = parseIsoDateKey(dateKey);
+
+  return {
+    startKey: toIsoDateKey(new Date(date.getFullYear(), date.getMonth(), 1)),
+    endKey: toIsoDateKey(new Date(date.getFullYear(), date.getMonth() + 1, 0)),
+  };
+};

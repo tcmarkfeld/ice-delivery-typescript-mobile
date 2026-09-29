@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
 import {
   getAllDeliveries,
@@ -57,6 +57,8 @@ export const useDeliveriesByDateRangeQuery = (
       return unwrapApiResult(result);
     },
     enabled: enabled && !!token,
+    // Keep showing the last range while a new one loads instead of blanking the list.
+    placeholderData: keepPreviousData,
   });
 };
 

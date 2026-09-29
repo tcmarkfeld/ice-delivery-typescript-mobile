@@ -1,5 +1,9 @@
 import { Delivery } from "@/api/types";
-import { addDaysToDateKey } from "@/features/date/date-key-utils";
+import {
+  addDaysToDateKey,
+  parseIsoDateKey,
+} from "@/features/date/date-key-utils";
+import { neighborhoodData } from "@/features/neighborhood/constants";
 
 export enum IceType {
   Bagged = "bagged ice",
@@ -47,6 +51,20 @@ export const toCount = (value: string | number): number => {
   const parsedValue = Number.parseInt(value, 10);
   return Number.isNaN(parsedValue) ? 0 : parsedValue;
 };
+
+export const toAmount = (value: string | number): number => {
+  if (typeof value === "number") {
+    return value;
+  }
+
+  const parsedValue = Number.parseFloat(value.replace(/[^0-9.-]/g, ""));
+  return Number.isNaN(parsedValue) ? 0 : parsedValue;
+};
+
+export const currencyFormatter = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "USD",
+});
 
 export const getDateKeyFromIso = (isoDateString: string): string => {
   return isoDateString.slice(0, 10);
@@ -299,4 +317,148 @@ export const buildDeliverySummary = (
   });
 
   return summary;
+};
+
+export enum StopKind {
+  Dropoff = "dropoff",
+  Refill = "refill",
+  Pickup = "pickup",
+}
+
+export const stopKindLabel: Record<StopKind, string> = {
+  [StopKind.Dropoff]: "Drop-off",
+  [StopKind.Refill]: "Refill",
+  [StopKind.Pickup]: "Pickup",
+};
+
+export const getStopKind = (delivery: Delivery, dateKey: string): StopKind => {
+  if (getDateKeyFromIso(delivery.end_date) === addDaysToDateKey(dateKey, -1)) {
+    return StopKind.Pickup;
+  }
+
+  if (getDateKeyFromIso(delivery.start_date) === dateKey) {
+    return StopKind.Dropoff;
+  }
+
+  return StopKind.Refill;
+};
+
+export enum RentalStatus {
+  Upcoming = "Upcoming",
+  Active = "Active",
+  Pickup = "Pickup today",
+  Finished = "Finished",
+}
+
+export const getRentalStatus = (
+  delivery: Delivery,
+  todayDateKey: string,
+): RentalStatus => {
+  const startDateKey = getDateKeyFromIso(delivery.start_date);
+  const endDateKey = getDateKeyFromIso(delivery.end_date);
+
+  if (startDateKey > todayDateKey) {
+    return RentalStatus.Upcoming;
+  }
+
+  if (endDateKey >= todayDateKey) {
+    return RentalStatus.Active;
+  }
+
+  if (endDateKey === addDaysToDateKey(todayDateKey, -1)) {
+    return RentalStatus.Pickup;
+  }
+
+  return RentalStatus.Finished;
+};
+
+export const getNeighborhoodLabel = (neighborhood: string | number): string => {
+  const neighborhoodValue = toCount(neighborhood);
+
+  return (
+    neighborhoodData.find((option) => option.value === neighborhoodValue)
+      ?.label ?? "Other"
+  );
+};
+
+export const getCoolerSizeLabel = (coolerSize: string): string => {
+  switch (toLowerTrimmed(coolerSize)) {
+    case CoolerSize.Quart40:
+      return "Small 40 qt";
+    case CoolerSize.Quart62:
+      return "Large 62 qt";
+    case CoolerSize.Quart200:
+      return "XL 200 qt";
+    default:
+      return coolerSize;
+  }
+};
+
+export const getBagCount = (
+  coolerSize: string,
+  coolerCount: number,
+): number => {
+  const multiplier =
+    bagMultiplierByCoolerSize[toLowerTrimmed(coolerSize) as CoolerSize] ?? 0;
+  return coolerCount * multiplier;
+};
+
+/** What the driver hands over at this stop, e.g. "4 bags" or "2 large coolers". */
+export const getIceLoadLabel = (delivery: Delivery): string => {
+  const coolerCount = toCount(delivery.cooler_num);
+  const coolerSize = toLowerTrimmed(delivery.cooler_size) as CoolerSize;
+
+  if (toLowerTrimmed(delivery.ice_type) === IceType.Loose) {
+    const sizeLabel = coolerSize === CoolerSize.Quart40 ? "small" : "large";
+    return `${coolerCount} ${sizeLabel} cooler${coolerCount === 1 ? "" : "s"} · loose`;
+  }
+
+  const bagCount = getBagCount(delivery.cooler_size, coolerCount);
+  return `${bagCount} bag${bagCount === 1 ? "" : "s"}`;
+};
+
+export const getRentalDayLabel = (
+  delivery: Delivery,
+  dateKey: string,
+): string => {
+  const startDate = parseIsoDateKey(getDateKeyFromIso(delivery.start_date));
+  const endDate = parseIsoDateKey(getDateKeyFromIso(delivery.end_date));
+  const currentDate = parseIsoDateKey(dateKey);
+  const dayInMs = 24 * 60 * 60 * 1000;
+  const totalDays =
+    Math.round((endDate.getTime() - startDate.getTime()) / dayInMs) + 1;
+  const currentDay =
+    Math.round((currentDate.getTime() - startDate.getTime()) / dayInMs) + 1;
+
+  return `Day ${Math.min(Math.max(currentDay, 1), totalDays)} of ${totalDays}`;
+};
+
+export const formatShortDate = (isoDateString: string): string => {
+  return parseIsoDateKey(getDateKeyFromIso(isoDateString)).toLocaleDateString(
+    "en-US",
+    { month: "short", day: "numeric" },
+  );
+};
+
+export interface NeighborhoodSection {
+  title: string;
+  data: Delivery[];
+}
+
+/** Groups already-sorted deliveries into consecutive neighborhood sections. */
+export const groupDeliveriesByNeighborhood = (
+  deliveries: Delivery[],
+): NeighborhoodSection[] => {
+  return deliveries.reduce<NeighborhoodSection[]>((sections, delivery) => {
+    const title = getNeighborhoodLabel(delivery.neighborhood);
+    const lastSection = sections[sections.length - 1];
+
+    if (lastSection?.title === title) {
+      lastSection.data.push(delivery);
+    } else {
+      sections.push({ title, data: [delivery] });
+    }
+
+    return sections;
+  }, []);
 };

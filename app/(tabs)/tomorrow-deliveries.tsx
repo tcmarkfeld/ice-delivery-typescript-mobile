@@ -1,15 +1,11 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import DateTimePicker, {
-  DateTimePickerAndroid,
-  DateTimePickerEvent,
-} from "@react-native-community/datetimepicker";
 import { router } from "expo-router";
 import { useMemo, useState } from "react";
 import {
   ActivityIndicator,
-  FlatList,
-  Platform,
   Pressable,
+  ScrollView,
+  SectionList,
   StyleSheet,
   Text,
   View,
@@ -17,246 +13,276 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useDeliveriesByDateRangeQuery } from "@/api/queries/use-deliveries-query";
-import { Delivery } from "@/api/types";
-import { DeliveryCountSummary } from "@/components/delivery/delivery-count-summary";
-import { DeliveryListItem } from "@/components/delivery/delivery-list-item";
-import { floatingTabBarContentBottomPadding } from "@/constants/navigation";
-import { AppTheme } from "@/constants/theme";
+import { LoadSummary } from "@/components/delivery/load-summary";
+import { NeighborhoodSectionHeader } from "@/components/delivery/neighborhood-section-header";
+import { StopCard } from "@/components/delivery/stop-card";
+import { Card } from "@/components/ui/card";
+import { useDatePicker } from "@/components/ui/date-picker-sheet";
+import { selectionHaptic } from "@/components/ui/haptics";
+import { ScreenHeader } from "@/components/ui/screen-header";
 import {
-  formatDateRangeLabel,
+  EmptyState,
+  ErrorState,
+  LoadingState,
+} from "@/components/ui/state-views";
+import { floatingTabBarContentBottomPadding } from "@/constants/navigation";
+import { AppTheme, Radius } from "@/constants/theme";
+import {
+  addDaysToDateKey,
   parseIsoDateKey,
   toIsoDateKey,
 } from "@/features/date/date-key-utils";
 import {
   buildDeliverySummary,
+  formatShortDate,
   getBusinessDateKey,
+  groupDeliveriesByNeighborhood,
   sortDeliveries,
 } from "@/features/deliveries/delivery-utils";
 import { useAppTheme } from "@/hooks/use-app-theme";
 import { useSession } from "@/hooks/use-session";
 import { useFloatingTabBar } from "@/providers/floating-tab-bar-provider";
 
-enum DateField {
-  Start = "start",
-  End = "end",
+enum RangePreset {
+  Tomorrow = "Tomorrow",
+  NextThreeDays = "Next 3 days",
+  NextWeek = "Next 7 days",
+  Custom = "Custom",
 }
 
-export default function TomorrowDeliveriesScreen() {
+const presetLengthInDays: Record<
+  Exclude<RangePreset, RangePreset.Custom>,
+  number
+> = {
+  [RangePreset.Tomorrow]: 1,
+  [RangePreset.NextThreeDays]: 3,
+  [RangePreset.NextWeek]: 7,
+};
+
+export default function PlanAheadScreen() {
   const theme = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
+  const { colors } = theme;
   const insets = useSafeAreaInsets();
   const { authToken } = useSession();
   const { handleScroll } = useFloatingTabBar();
+  const { openDatePicker, datePickerSheet } = useDatePicker();
 
   const tomorrowDateKey = getBusinessDateKey(1);
+  const [preset, setPreset] = useState<RangePreset>(RangePreset.Tomorrow);
   const [startDate, setStartDate] = useState<string>(tomorrowDateKey);
   const [endDate, setEndDate] = useState<string>(tomorrowDateKey);
-  const [activeDateField, setActiveDateField] = useState<DateField | null>(
-    null,
-  );
 
   const deliveriesQuery = useDeliveriesByDateRangeQuery(
     authToken,
     startDate,
     endDate,
   );
-
   const sortedDeliveries = sortDeliveries(deliveriesQuery.data ?? []);
-  const deliverySummary = buildDeliverySummary(
-    deliveriesQuery.data ?? [],
-    startDate,
+  const summary = buildDeliverySummary(sortedDeliveries, startDate);
+  const sections = groupDeliveriesByNeighborhood(sortedDeliveries);
+  const isSingleDay = startDate === endDate;
+  const staleStyle = deliveriesQuery.isPlaceholderData
+    ? styles.staleContent
+    : undefined;
+  const rangeLabel = isSingleDay
+    ? parseIsoDateKey(startDate).toLocaleDateString("en-US", {
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+      })
+    : `${formatShortDate(startDate)} – ${formatShortDate(endDate)}`;
+
+  const selectPreset = (nextPreset: RangePreset) => {
+    selectionHaptic();
+    setPreset(nextPreset);
+
+    if (nextPreset === RangePreset.Custom) {
+      return;
+    }
+
+    setStartDate(tomorrowDateKey);
+    setEndDate(
+      addDaysToDateKey(tomorrowDateKey, presetLengthInDays[nextPreset] - 1),
+    );
+  };
+
+  const renderDateButton = (
+    label: string,
+    dateKey: string,
+    isStart: boolean,
+  ) => (
+    <Pressable
+      accessibilityLabel={`${label} date, ${formatShortDate(dateKey)}`}
+      accessibilityRole="button"
+      onPress={() =>
+        openDatePicker({
+          title: `${label} date`,
+          value: parseIsoDateKey(dateKey),
+          onSelect: (date) => {
+            const selectedDateKey = toIsoDateKey(date);
+
+            if (isStart) {
+              setStartDate(selectedDateKey);
+              if (selectedDateKey > endDate) {
+                setEndDate(selectedDateKey);
+              }
+            } else {
+              setEndDate(selectedDateKey);
+              if (selectedDateKey < startDate) {
+                setStartDate(selectedDateKey);
+              }
+            }
+          },
+        })
+      }
+      style={styles.dateButton}
+    >
+      <Text style={styles.dateButtonLabel}>{label}</Text>
+      <Text style={styles.dateButtonValue}>{formatShortDate(dateKey)}</Text>
+    </Pressable>
   );
 
-  const onDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
-    if (event.type === "dismissed") {
-      setActiveDateField(null);
-      return;
-    }
+  const header = (
+    <>
+      <ScreenHeader
+        eyebrow={rangeLabel}
+        onBack={() => router.back()}
+        title="Plan ahead"
+      />
+      <ScrollView
+        contentContainerStyle={styles.presetRow}
+        horizontal
+        style={styles.presetScroll}
+        showsHorizontalScrollIndicator={false}
+      >
+        {Object.values(RangePreset).map((option) => {
+          const isSelected = option === preset;
 
-    if (!selectedDate || !activeDateField) {
-      setActiveDateField(null);
-      return;
-    }
-
-    const selectedDateKey = toIsoDateKey(selectedDate);
-
-    if (activeDateField === DateField.Start) {
-      setStartDate(selectedDateKey);
-      if (selectedDateKey > endDate) {
-        setEndDate(selectedDateKey);
-      }
-    }
-
-    if (activeDateField === DateField.End) {
-      setEndDate(selectedDateKey);
-      if (selectedDateKey < startDate) {
-        setStartDate(selectedDateKey);
-      }
-    }
-
-    if (Platform.OS === "android") {
-      setActiveDateField(null);
-    }
-  };
-
-  const openDatePicker = (field: DateField) => {
-    const dateKey = field === DateField.Start ? startDate : endDate;
-    const currentDate = parseIsoDateKey(dateKey);
-
-    if (Platform.OS === "android") {
-      setActiveDateField(field);
-      DateTimePickerAndroid.open({
-        mode: "date",
-        value: currentDate,
-        onChange: (event, selectedDate) => {
-          setActiveDateField(field);
-          onDateChange(event, selectedDate);
-        },
-      });
-      return;
-    }
-
-    setActiveDateField(field);
-  };
+          return (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityState={{ selected: isSelected }}
+              key={option}
+              onPress={() => selectPreset(option)}
+              style={[
+                styles.presetChip,
+                isSelected
+                  ? { backgroundColor: colors.text, borderColor: colors.text }
+                  : undefined,
+              ]}
+            >
+              {option === RangePreset.Custom ? (
+                <MaterialCommunityIcons
+                  color={isSelected ? colors.screen : colors.textMuted}
+                  name="calendar-range"
+                  size={16}
+                />
+              ) : null}
+              <Text
+                style={[
+                  styles.presetText,
+                  isSelected ? { color: colors.screen } : undefined,
+                ]}
+              >
+                {option}
+              </Text>
+            </Pressable>
+          );
+        })}
+        {deliveriesQuery.isPlaceholderData ? (
+          <ActivityIndicator color={colors.primary} />
+        ) : null}
+      </ScrollView>
+      {preset === RangePreset.Custom ? (
+        <View style={styles.dateRow}>
+          {renderDateButton("Start", startDate, true)}
+          <MaterialCommunityIcons
+            color={colors.textSubtle}
+            name="arrow-right"
+            size={20}
+          />
+          {renderDateButton("End", endDate, false)}
+        </View>
+      ) : null}
+    </>
+  );
 
   return (
-    <View style={[styles.screen, { paddingTop: insets.top + 8 }]}>
-      <View style={styles.headerRow}>
-        <View style={styles.titleRow}>
-          <Pressable onPress={() => router.back()} style={styles.backButton}>
-            <MaterialCommunityIcons
-              color={theme.colors.primary}
-              name="arrow-left"
-              size={20}
-            />
-          </Pressable>
-          <Text style={styles.pageTitle}>Tomorrow&apos;s Deliveries</Text>
-        </View>
-        <Pressable
-          onPress={() => deliveriesQuery.refetch()}
-          style={styles.refreshButton}
-        >
-          <MaterialCommunityIcons
-            color={theme.colors.iconOnPrimary}
-            name="refresh-circle"
-            size={22}
-          />
-        </Pressable>
-      </View>
-
-      <View style={styles.dateFilterCard}>
-        <View style={styles.dateFilterHeader}>
-          <Text style={styles.dateFilterTitle}>Date Range</Text>
-          <Pressable
-            onPress={() => {
-              setStartDate(tomorrowDateKey);
-              setEndDate(tomorrowDateKey);
-            }}
-            style={styles.resetRangeButton}
-          >
-            <Text style={styles.resetRangeButtonText}>View Tomorrow</Text>
-          </Pressable>
-        </View>
-        <View style={styles.dateRow}>
-          <View style={styles.dateField}>
-            <Text style={styles.dateLabel}>Start</Text>
-            <Pressable
-              onPress={() => openDatePicker(DateField.Start)}
-              style={styles.dateSelector}
-            >
-              <Text style={styles.dateSelectorText}>{startDate}</Text>
-            </Pressable>
-          </View>
-          <View style={styles.dateField}>
-            <Text style={styles.dateLabel}>End</Text>
-            <Pressable
-              onPress={() => openDatePicker(DateField.End)}
-              style={styles.dateSelector}
-            >
-              <Text style={styles.dateSelectorText}>{endDate}</Text>
-            </Pressable>
-          </View>
-        </View>
-        <Text style={styles.dateRangeText}>
-          Showing: {formatDateRangeLabel(startDate, endDate)}
-        </Text>
-      </View>
-
-      {Platform.OS === "ios" && activeDateField ? (
-        <View style={styles.iosPickerCard}>
-          <View style={styles.iosPickerHeader}>
-            <Text style={styles.iosPickerTitle}>Select Date</Text>
-            <Pressable
-              onPress={() => setActiveDateField(null)}
-              style={styles.iosPickerDoneButton}
-            >
-              <Text style={styles.iosPickerDoneText}>Done</Text>
-            </Pressable>
-          </View>
-          <DateTimePicker
-            display="inline"
-            mode="date"
-            onChange={onDateChange}
-            themeVariant={theme.datePickerVariant}
-            value={parseIsoDateKey(
-              activeDateField === DateField.Start ? startDate : endDate,
-            )}
-          />
-        </View>
-      ) : null}
-
+    <View style={styles.screen}>
       {deliveriesQuery.isLoading ? (
-        <View style={styles.centeredScreen}>
-          <ActivityIndicator size="large" />
-        </View>
-      ) : null}
-
-      {deliveriesQuery.isError ? (
-        <View style={styles.centeredScreen}>
-          <Text style={styles.errorText}>{deliveriesQuery.error.message}</Text>
-          <Pressable
-            onPress={() => deliveriesQuery.refetch()}
-            style={styles.retryButton}
-          >
-            <Text style={styles.retryButtonText}>Retry</Text>
-          </Pressable>
-        </View>
-      ) : null}
-
-      {!deliveriesQuery.isLoading && !deliveriesQuery.isError ? (
-        <FlatList
-          contentContainerStyle={styles.listContent}
-          data={sortedDeliveries}
+        <>
+          {header}
+          <LoadingState />
+        </>
+      ) : deliveriesQuery.isError ? (
+        <>
+          {header}
+          <ErrorState
+            message={deliveriesQuery.error.message}
+            onRetry={() => deliveriesQuery.refetch()}
+          />
+        </>
+      ) : (
+        <SectionList
+          contentContainerStyle={{
+            paddingBottom: floatingTabBarContentBottomPadding + insets.bottom,
+          }}
           keyExtractor={(item, index) => `${String(item.id)}-${index}`}
-          onScroll={handleScroll}
-          ListHeaderComponent={
-            <DeliveryCountSummary
-              heading="Selected Range Counts"
-              summary={deliverySummary}
+          ListEmptyComponent={
+            <EmptyState
+              body="Try a different range or pull down to refresh."
+              icon="calendar-blank-outline"
+              title="No stops scheduled"
             />
+          }
+          ListHeaderComponent={
+            <>
+              {header}
+              {sortedDeliveries.length > 0 ? (
+                <View style={[styles.overview, staleStyle]}>
+                  <View style={styles.statRow}>
+                    <Text style={styles.statValue}>
+                      {summary.deliveryCount}
+                    </Text>
+                    <Text style={styles.statLabel}>
+                      stop{summary.deliveryCount === 1 ? "" : "s"}{" "}
+                      {isSingleDay ? "scheduled" : "in this range"}
+                    </Text>
+                  </View>
+                  <Card>
+                    <LoadSummary defaultExpanded summary={summary} />
+                  </Card>
+                </View>
+              ) : null}
+            </>
           }
           onRefresh={() => deliveriesQuery.refetch()}
+          onScroll={handleScroll}
           refreshing={deliveriesQuery.isRefetching}
-          renderItem={({ item }: { item: Delivery }) => (
-            <DeliveryListItem
-              delivery={item}
-              todayDateKey={startDate}
-              useCompactCoolerLabel
-            />
-          )}
-          ListEmptyComponent={
-            <View style={styles.emptyStateCard}>
-              <Text style={styles.emptyTitle}>
-                No deliveries in selected range
-              </Text>
-              <Text style={styles.emptyBody}>
-                Try another range or pull down to refresh.
-              </Text>
+          renderItem={({ item }) => (
+            <View style={[styles.item, staleStyle]}>
+              <StopCard dateKey={startDate} delivery={item} />
             </View>
-          }
+          )}
+          renderSectionHeader={({ section }) => (
+            <View style={staleStyle}>
+              <NeighborhoodSectionHeader
+                stopCount={section.data.length}
+                title={section.title}
+              />
+            </View>
+          )}
           scrollEventThrottle={16}
+          sections={sections}
+          stickySectionHeadersEnabled={false}
         />
-      ) : null}
+      )}
+      <View
+        pointerEvents="none"
+        style={[styles.statusBarScrim, { height: insets.top }]}
+      />
+      {datePickerSheet}
     </View>
   );
 }
@@ -267,183 +293,93 @@ const createStyles = (theme: AppTheme) =>
       backgroundColor: theme.colors.screen,
       flex: 1,
     },
-    headerRow: {
+    statusBarScrim: {
+      backgroundColor: theme.colors.screen,
+      left: 0,
+      position: "absolute",
+      right: 0,
+      top: 0,
+    },
+    // Horizontal ScrollViews grow to fill a column by default, which
+    // stretched the chips while the loading state shares the screen.
+    staleContent: {
+      opacity: 0.45,
+    },
+    presetScroll: {
+      flexGrow: 0,
+    },
+    presetRow: {
       alignItems: "center",
-      flexDirection: "row",
-      justifyContent: "space-between",
+      gap: 8,
       paddingBottom: 12,
       paddingHorizontal: 16,
     },
-    titleRow: {
+    presetChip: {
       alignItems: "center",
-      flexDirection: "row",
-      gap: 8,
-    },
-    pageTitle: {
-      color: theme.colors.text,
-      fontSize: 24,
-      fontWeight: "800",
-    },
-    backButton: {
-      alignItems: "center",
-      borderColor: theme.colors.primary,
-      borderRadius: 9,
-      borderWidth: StyleSheet.hairlineWidth,
-      height: 34,
-      justifyContent: "center",
-      width: 34,
-    },
-    refreshButton: {
-      alignItems: "center",
-      backgroundColor: theme.colors.primary,
-      borderRadius: 9,
-      justifyContent: "center",
-      minHeight: 38,
-      minWidth: 38,
-    },
-    dateFilterCard: {
       backgroundColor: theme.colors.surface,
       borderColor: theme.colors.border,
-      borderRadius: 10,
+      borderRadius: Radius.pill,
       borderWidth: StyleSheet.hairlineWidth,
-      marginBottom: 10,
-      marginHorizontal: 16,
-      padding: 10,
-    },
-    dateFilterHeader: {
-      alignItems: "center",
       flexDirection: "row",
-      justifyContent: "space-between",
-      marginBottom: 8,
+      gap: 6,
+      minHeight: 40,
+      paddingHorizontal: 16,
     },
-    dateFilterTitle: {
-      color: theme.colors.text,
-      fontSize: 14,
-      fontWeight: "800",
-    },
-    resetRangeButton: {
-      backgroundColor: theme.colors.primaryMuted,
-      borderColor: theme.colors.primary,
-      borderRadius: 9,
-      borderWidth: StyleSheet.hairlineWidth,
-      paddingHorizontal: 10,
-      paddingVertical: 6,
-    },
-    resetRangeButtonText: {
-      color: theme.colors.primaryText,
-      fontSize: 12,
+    presetText: {
+      color: theme.colors.textMuted,
+      fontSize: 15,
       fontWeight: "700",
     },
     dateRow: {
+      alignItems: "center",
       flexDirection: "row",
       gap: 10,
+      paddingBottom: 12,
+      paddingHorizontal: 16,
     },
-    dateField: {
-      flex: 1,
-    },
-    dateLabel: {
-      color: theme.colors.textSubtle,
-      fontSize: 12,
-      fontWeight: "700",
-      marginBottom: 4,
-    },
-    dateSelector: {
-      backgroundColor: theme.colors.inputBackground,
-      borderColor: theme.colors.borderStrong,
-      borderRadius: 9,
-      borderWidth: StyleSheet.hairlineWidth,
-      minHeight: 40,
-      justifyContent: "center",
-      paddingHorizontal: 12,
-    },
-    dateSelectorText: {
-      color: theme.colors.text,
-      fontSize: 14,
-      fontWeight: "600",
-    },
-    dateRangeText: {
-      color: theme.colors.textSubtle,
-      fontSize: 12,
-      marginTop: 8,
-    },
-    iosPickerCard: {
-      backgroundColor: theme.colors.modalSurface,
+    dateButton: {
+      backgroundColor: theme.colors.surface,
       borderColor: theme.colors.border,
-      borderRadius: 10,
+      borderRadius: Radius.md,
       borderWidth: StyleSheet.hairlineWidth,
-      marginBottom: 10,
-      marginHorizontal: 16,
-      overflow: "hidden",
-    },
-    iosPickerHeader: {
-      alignItems: "center",
-      borderBottomColor: theme.colors.border,
-      borderBottomWidth: 1,
-      flexDirection: "row",
-      justifyContent: "space-between",
-      paddingHorizontal: 12,
-      paddingVertical: 8,
-    },
-    iosPickerTitle: {
-      color: theme.colors.text,
-      fontSize: 13,
-      fontWeight: "700",
-    },
-    iosPickerDoneButton: {
-      paddingHorizontal: 8,
-      paddingVertical: 4,
-    },
-    iosPickerDoneText: {
-      color: theme.colors.primary,
-      fontSize: 13,
-      fontWeight: "700",
-    },
-    listContent: {
-      gap: 10,
-      paddingBottom: floatingTabBarContentBottomPadding,
-      paddingHorizontal: 16,
-    },
-    centeredScreen: {
-      alignItems: "center",
       flex: 1,
-      justifyContent: "center",
-      paddingHorizontal: 16,
-    },
-    errorText: {
-      color: theme.colors.danger,
-      fontSize: 14,
-      marginBottom: 10,
-      textAlign: "center",
-    },
-    retryButton: {
-      backgroundColor: theme.colors.primary,
-      borderRadius: 9,
       paddingHorizontal: 14,
       paddingVertical: 10,
     },
-    retryButtonText: {
-      color: theme.colors.iconOnPrimary,
-      fontSize: 14,
+    dateButtonLabel: {
+      color: theme.colors.textSubtle,
+      fontSize: 12,
       fontWeight: "700",
     },
-    emptyStateCard: {
-      alignItems: "center",
-      backgroundColor: theme.colors.surface,
-      borderColor: theme.colors.border,
-      borderRadius: 10,
-      borderWidth: StyleSheet.hairlineWidth,
-      paddingHorizontal: 16,
-      paddingVertical: 22,
-    },
-    emptyTitle: {
+    dateButtonValue: {
       color: theme.colors.text,
-      fontSize: 18,
+      fontSize: 17,
+      fontWeight: "700",
+      marginTop: 2,
+    },
+    overview: {
+      gap: 12,
+      paddingHorizontal: 16,
+    },
+    statRow: {
+      alignItems: "baseline",
+      flexDirection: "row",
+      gap: 6,
+      paddingHorizontal: 4,
+    },
+    statValue: {
+      color: theme.colors.text,
+      fontSize: 28,
+      fontVariant: ["tabular-nums"],
       fontWeight: "800",
     },
-    emptyBody: {
-      color: theme.colors.textSubtle,
-      fontSize: 14,
-      marginTop: 6,
-      textAlign: "center",
+    statLabel: {
+      color: theme.colors.textMuted,
+      fontSize: 16,
+      fontWeight: "600",
+    },
+    item: {
+      paddingBottom: 8,
+      paddingHorizontal: 16,
     },
   });
